@@ -1,11 +1,29 @@
-import { globalState } from './state.mjs';
-const { clu_insecure, clu_endpoint, demo_mode, selected_env_vars, random_code, chaos_logs_pos, log_tail_switch, chaos_job_regex, chaos_jobs_status, chart_chaos_jobs_total, chart_deleted_pods_total, chart_fewer_replicas_seconds, chart_latest_fewer_replicas_seconds, chart_pods_not_running_on, chart_current_chaos_job_pod, nodes, pods, aliens, aliensY, maxAliensPerRow, aliensIncrementY, shuffle, game_mode_switch, programming_mode_switch, chaos_program_valid, chaos_report_switch, chaosReportprojectName, codename, codename_regex, codename_configured, chaosProgram, chaosProgramWithCodename, endpoint, namespace, namespaces_index, namespaces, namespacesJumpFlag, namespacesJumpStatus, showPodName, autoPilot, autoPilotDirection, spaceshipX, spaceshipY, spaceshipWidth, spaceshipHeight, rocketX, rocketY, rocketSpeed, rocketLaunched, collisionDetected, rightPressed, leftPressed, upPressed, downPressed, shot, modal_opened, help, randomFactor, startYforHelp, alert_div, log_tail_alert, log_tail_alert_no_pixel, chaosProgramTextArea, chaosReportKeepAlive, updateElapsedTimeArray, updateChaosReportStartTime, drawCanvasHTTPStatusCodeStats, updateMainMetricsChart, drawChaosProgramFlow, getSavedPresets, setModalState, is_demo_mode, demo_mode_alert, switchNamespace, contains, getRandomInt } = globalState;
+/*
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
+/*
+This file contains the main JavaScript code for the KubeInvaders game.
+It handles the initialization of the game, interaction with the Kubernetes cluster,
+and various game functionalities such as chaos engineering actions, metrics retrieval,
+and user interactions.
+*/
 
 if (clu_insecure) {
-    k8s_url = "http://" + clu_endpoint;
-}
-else {
-    k8s_url = "https://" + clu_endpoint;
+    var k8s_url = "http://" + clu_endpoint;
+  }
+  else {
+    var k8s_url = "https://" + clu_endpoint;
 }
 
 console.log("[K-INV STARTUP] k8s_url is " + k8s_url);

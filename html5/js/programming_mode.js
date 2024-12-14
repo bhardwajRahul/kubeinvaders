@@ -19,9 +19,6 @@ and various game functionalities such as chaos engineering actions, metrics retr
 and user interactions.
 */
 
-import { globalState } from './state.mjs';
-const { k8s_url, random_code, alert_div, programming_mode_switch, modal_opened, log_tail_switch, log_tail_div, log_tail_screen, current_color_mode, chaos_jobs_status } = globalState;
-
 function replaceDivWithContent(divId, content) {
     document.getElementById(divId).innerHTML = content;
 }

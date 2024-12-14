@@ -19,9 +19,6 @@ and various game functionalities such as chaos engineering actions, metrics retr
 and user interactions.
 */
 
-import { globalState } from './state.mjs';
-const { k8s_url, namespace, chaos_report_post_data, chaos_report_start_date, chaos_report_switch, chart_status_code_dict, chaos_report_http_elapsed_time_array, chart_current_chaos_job_pod, chart_pods_not_running_on, chart_fewer_replicas_seconds, chart_latest_fewer_replicas_seconds, alert_div } = globalState;
-
 function setChaosReportURL(select) {
   var selectedValue = select.options[select.selectedIndex].value;
   document.getElementById("chaosReportCheckSiteURL").value = selectedValue;

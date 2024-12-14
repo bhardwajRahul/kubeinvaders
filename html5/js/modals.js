@@ -19,9 +19,6 @@ and various game functionalities such as chaos engineering actions, metrics retr
 and user interactions.
 */
 
-import { globalState } from './state.mjs';
-const { modal_opened, kubeping_sent, namespace } = globalState;
-
 /* Modals Switches */
 function setModalState(state) {
   modal_opened = state;

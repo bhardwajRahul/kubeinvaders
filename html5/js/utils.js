@@ -19,8 +19,9 @@ and various game functionalities such as chaos engineering actions, metrics retr
 and user interactions.
 */
 
-import { globalState } from './state.mjs';
-const { demo_mode, k8s_url, kubeping_sent } = globalState;
+const demo_mode = globalState.get('demo_mode');
+const k8s_url = globalState.get('k8s_url');
+const kubeping_sent = globalState.get('kubeping_sent');
 
 document.addEventListener("DOMContentLoaded", function() {
   setTimeout(function() {

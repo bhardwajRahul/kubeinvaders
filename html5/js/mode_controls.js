@@ -19,8 +19,6 @@ and various game functionalities such as chaos engineering actions, metrics retr
 and user interactions.
 */
 
-import { globalState } from './state.mjs';
-let { game_mode_switch, programming_mode_switch, game_buttons, game_screen, chaos_program_screen, programming_mode_buttons, editor, chaosProgramTextArea } = globalState;
 
 function startGameMode() {
   if (game_mode_switch) {

@@ -1,25 +1,59 @@
+/*
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
+/*
+This file contains the main JavaScript code for the KubeInvaders game.
+It handles the initialization of the game, interaction with the Kubernetes cluster,
+and various game functionalities such as chaos engineering actions, metrics retrieval,
+and user interactions.
+*/
+
+function getCodeName() {
+  const prefixes = ['astro', 'cosmo', 'space', 'star', 'nova', 'nebula', 'galaxy', 'super', 'hyper', 'quantum'];
+  const suffixes = ['nova', 'tron', 'wave', 'core', 'pulse', 'jump', 'drive', 'ship', 'gate', 'hole'];
+
+  const prefix = prefixes[Math.floor(Math.random() * prefixes.length)];
+  const suffix = suffixes[Math.floor(Math.random() * suffixes.length)];
+
+  return prefix + suffix;
+}
+
 class GlobalState {
   constructor() {
+    const spaceshipHeight = 60;
+    const spaceshipWidth = 60;
+    const namespaces = [];
+    const namespaces_index = 0;
+
     this.state = {
-      canvas: document.getElementById("myCanvas"),
-      ctx: canvas.getContext("2d"),
       ballRadius: 7,
-      x: canvas.width/2,
-      y: canvas.height-30,
+      x: canvas.width / 2,
+      y: canvas.height - 30,
       dx: 2,
       dy: -2,
-      spaceshipHeight: 60,
-      spaceshipWidth: 60,
-      spaceshipX: (canvas.width-spaceshipWidth)/2,
-      spaceshipY: (canvas.height-spaceshipHeight)/2,
+      spaceshipHeight: spaceshipHeight,
+      spaceshipWidth: spaceshipWidth,
+      spaceshipX: (canvas.width - spaceshipWidth) / 2,
+      spaceshipY: (canvas.height - spaceshipHeight) / 2,
       clu_endpoint: "endpoint_placeholder",
-      clu_insecure: insecure_endpoint_placeholder,
-      demo_mode: demo_mode_placeholder,
+      clu_insecure: "insecure_endpoint_placeholder",
+      demo_mode: "demo_mode_placeholder",
       k8s_url: "",
       chaos_report_post_data: "",
       selected_env_vars: "selected_env_vars_placeholder",
-      namespaces: [],
-      namespaces_index: 0,
+      namespaces: namespaces,
+      namespaces_index: namespaces_index,
       namespace: namespaces[namespaces_index],
       endpoint: "",
       modal_opened: false,
@@ -86,20 +120,41 @@ class GlobalState {
       chart_fewer_replicas_seconds: 0,
       chart_latest_fewer_replicas_seconds: 0,
       chart_status_code_dict: {
-          "200": 1,
-          "500": 1,
-          "502": 1,
-          "503": 1,
-          "504": 1,
-          "400": 1,
-          "401": 1,
-          "403": 1,
-          "404": 1,
-          "405": 1,
-          "Connection Error": 1,
-          "Other": 1
+        "200": 1,
+        "500": 1,
+        "502": 1,
+        "503": 1,
+        "504": 1,
+        "400": 1,
+        "401": 1,
+        "403": 1,
+        "404": 1,
+        "405": 1,
+        "Connection Error": 1,
+        "Other": 1
       },
     };
+
+    // Proxy per rendere le proprietà direttamente globali
+    const proxy = new Proxy(this.state, {
+      get: (target, prop) => {
+        if (prop in target) {
+          window[prop] = target[prop]; // Esponi direttamente la proprietà nell'oggetto globale `window`
+          return target[prop];
+        } else {
+          console.warn(`Property ${prop} not found!`);
+          return undefined;
+        }
+      },
+      set: (target, prop, value) => {
+        target[prop] = value;
+        window[prop] = value; // Assicura che la proprietà venga aggiornata anche nel `window`
+        return true;
+      }
+    });
+
+    // Sovrascrivi lo stato con il proxy
+    this.state = proxy;
   }
 
   get(key) {
@@ -111,4 +166,9 @@ class GlobalState {
   }
 }
 
-export const globalState = new GlobalState();
+// Creazione dell'istanza di GlobalState
+var canvas = document.getElementById("myCanvas");
+var ctx = canvas.getContext("2d");
+
+window.GlobalState = GlobalState;
+const globalState = new window.GlobalState();

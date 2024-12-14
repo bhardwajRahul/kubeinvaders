@@ -19,9 +19,6 @@ and various game functionalities such as chaos engineering actions, metrics retr
 and user interactions.
 */
 
-import { globalState } from './state.mjs';
-const { autoPilot, chaos_report_switch, randomFactor, current_color_mode, namespaces, namespaces_index, namespace, aliens, pods, log_tail_switch, log_tail_div, log_tail_screen, alert_div, alert_div_webtail, maxAliensPerRow, myMainChaosMetrics, startYforHelp } = globalState;
-
 /* Function for managing game console */
 function zoomIn() {
   if (document.getElementById("myCanvas").width != 1200) {
