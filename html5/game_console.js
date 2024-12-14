@@ -1,3 +1,27 @@
+/*
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
+/*
+This file contains the main JavaScript code for the KubeInvaders game.
+It handles the initialization of the game, interaction with the Kubernetes cluster,
+and various game functionalities such as chaos engineering actions, metrics retrieval,
+and user interactions.
+*/
+
+import { globalState } from './state.mjs';
+const { autoPilot, chaos_report_switch, randomFactor, current_color_mode, namespaces, namespaces_index, namespace, aliens, pods, log_tail_switch, log_tail_div, log_tail_screen, alert_div, alert_div_webtail, maxAliensPerRow, myMainChaosMetrics, startYforHelp } = globalState;
+
 /* Function for managing game console */
 function zoomIn() {
   if (document.getElementById("myCanvas").width != 1200) {
