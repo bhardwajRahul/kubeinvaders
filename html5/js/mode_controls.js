@@ -39,18 +39,22 @@ function startGameMode() {
     $("#programmingModeButton").text("Enable Prog. Mode");
     globalState.set('programming_mode_switch', false);
   }
-  if (game_buttons.style.display === "none") {
+  if (globalState.get('game_buttons_display') === "none") {
+    globalState.set('game_buttons_display', "block");
     game_buttons.style.display = "block";
   } else {
+    globalState.set('game_buttons_display', "none");
     game_buttons.style.display = "none";
   }
-  if (game_screen.style.display === "none") {
+  if (globalState.get('game_screen_display') === "none") {
+    globalState.set('game_screen_display', "block");
     game_screen.style.display = "block";
   } else {
+    globalState.set('game_screen_display', "none");
     game_screen.style.display = "none";
   }
-  chaos_program_screen.style.display = "none";
-  programming_mode_buttons.style.display = "none";
+  globalState.set('chaos_program_screen_display', "none");
+  globalState.set('programming_mode_buttons_display', "none");
   resizeCharts();
 }
 
