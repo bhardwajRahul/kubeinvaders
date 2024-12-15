@@ -90,7 +90,7 @@ function setCodeNameToTextInput(elementId) {
     var oReq = new XMLHttpRequest();
     oReq.onreadystatechange = function () {
         if (this.readyState === XMLHttpRequest.DONE && this.status === 200) {
-            globalState.set('codename') = this.responseText.trim();
+            globalState.set('codename',this.responseText.trim());
             $("#" + elementId).val(globalState.get('codename'));
             $("#" + elementId).text(globalState.get('codename'));
             if (globalState.get('codename') == "") {

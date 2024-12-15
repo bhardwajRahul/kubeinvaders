@@ -21,6 +21,7 @@ and user interactions.
 
 function startGameMode() {
   let game_buttons = document.getElementById("game-buttons");
+  let game_screen = document.getElementById("game-screen");
   if (globalState.get('game_mode_switch')) {
     globalState.set('game_mode_switch', false);
     $("#gameModeButton").text("Enable Game Mode");
@@ -60,6 +61,7 @@ function startGameMode() {
 }
 
 function startProgrammingMode() {
+  let game_screen = document.getElementById("game-screen");
   kubePingModalSwitch();
   if (is_demo_mode()) {
     demo_mode_alert();
