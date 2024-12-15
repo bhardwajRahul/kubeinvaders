@@ -561,25 +561,25 @@ function drawRocket() {
     ctx.closePath();
 
     if (checkRocketAlienCollision()) {
-        rocketY = -100;
-        rocketX = -100;
-        collisionDetected = false;
+        globalState.set('rocketY') = -100;
+        globalState.set('rocketX') = -100;
+        globalState.set('collisionDetected') = false;
         return
     }
 
-    if (shot && rocketLaunched) {
-        if (rocketY < 0) {
-            shot = false;
-            rocketLaunched = false;
+    if (globalState.get('shot') && globalState.get('rocketLaunched')) {
+        if (globalState.get('rocketY') < 0) {
+            globalState.set('shot') = false;
+            globalState.set('rocketLaunched') = false;
         }
         else {
-            rocketY = rocketY -= rocketSpeed;
+            globalState.set('rocketY', globalState.get('rocketY') - globalState.get('rocketSpeed'));
         }
     }
     else {
-        rocketX = spaceshipX + (spaceshipWidth / 3);
-        rocketY = spaceshipY;
-        rocketLaunched = true
+        globalState.set('rocketX', globalState.get('spaceshipX') + (spaceshipWidth / 3));
+        globalState.set('rocketY', globalState.get('spaceshipY'));
+        globalState.set('rocketLaunched', true);
     }
 }
 
