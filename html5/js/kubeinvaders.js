@@ -19,21 +19,16 @@ and various game functionalities such as chaos engineering actions, metrics retr
 and user interactions.
 */
 
-if (clu_insecure) {
-    var k8s_url = "http://" + clu_endpoint;
-  }
-  else {
-    var k8s_url = "https://" + clu_endpoint;
+if (globalState.get('clu_insecure')) {
+   globalState.set("http://" + globalState.get('clu_endpoint'));
+}
+else {
+    globalState.set("https://" + globalState.get('clu_endpoint'));
 }
 
 console.log("[K-INV STARTUP] k8s_url is " + k8s_url);
 console.log("[K-INV STARTUP] platformengineering.it demo_mode is " + String(demo_mode));
 
-var editor_chaos_container_definition = CodeMirror.fromTextArea(currentChaosContainerJsonTextArea, {
-    lineNumbers: true,
-    theme: "dracula",
-    mode: "javascript"
-  });
 
 function checkHTTP(url, elementId) {
     var oReq = new XMLHttpRequest();
@@ -79,112 +74,104 @@ function setSystemSettings() {
     sys_element.value = k8s_url;
 
     sys_element = document.getElementById('sys_insecure_endpoint_flag');
-    sys_element.value = clu_insecure;
+    sys_element.value = globalState.get('clu_insecure');
 
     sys_element = document.getElementById('sys_openresty_env_vars');
     sys_element.value = selected_env_vars;
     
-    checkHTTP(k8s_url, 'sys_k8s_proxied_api_http_status_code')
+    checkHTTP(globalState.get('k8s_url'), 'sys_k8s_proxied_api_http_status_code')
 }
 
 function currentChaosContainerJsonTextAreaVal() {
     return editor_chaos_container_definition.getValue();
 }
 
-function getCodeName() {
-    const prefixes = ['astro', 'cosmo', 'space', 'star', 'nova', 'nebula', 'galaxy', 'super', 'hyper', 'quantum'];
-    const suffixes = ['nova', 'tron', 'wave', 'core', 'pulse', 'jump', 'drive', 'ship', 'gate', 'hole'];
-
-    const prefix = prefixes[Math.floor(Math.random() * prefixes.length)];
-    const suffix = suffixes[Math.floor(Math.random() * suffixes.length)];
-
-    const   
-    codename = prefix + suffix;
-    return codename;
-}
-
 function setCodeNameToTextInput(elementId) {
     var oReq = new XMLHttpRequest();
     oReq.onreadystatechange = function () {
         if (this.readyState === XMLHttpRequest.DONE && this.status === 200) {
-            codename = this.responseText.trim();
-            $("#" + elementId).val(codename);
-            $("#" + elementId).text(codename);
-            if (codename == "") {
+            globalState.set('codename') = this.responseText.trim();
+            $("#" + elementId).val(globalState.get('codename'));
+            $("#" + elementId).text(globalState.get('codename'));
+            if (globalState.get('codename') == "") {
                 $('#alert_placeholder').replaceWith(alert_div + 'Error getting codename from backend. </div>');
-                codename = "error_fix_getcodename_from_backend";
+                globalState.set('codename') = "error_fix_getcodename_from_backend";
             }
         }
     };;
-    oReq.open("GET", k8s_url + "/codename");
+    oReq.open("GET", globalState.get('k8s_url') + "/codename");
     oReq.send();
 }
 
 function getMetrics() {
     var oReq = new XMLHttpRequest();
     oReq.onload = function () {
-        var lines = this.responseText.split('\n');
+        let lines = this.responseText.split('\n');
+        let metric = [];
         for (var i = 0;i < lines.length;i++){
             metric = lines[i].split(' ');
 
             if (metric[0] == "chaos_node_jobs_total") {
                 $('#chaos_jobs_total').text(metric[1]);
-                chart_chaos_jobs_total = Number(metric[1]);
+                globalState.set('chart_chaos_jobs_total') = Number(metric[1]);
             }
             else if (metric[0] == "deleted_pods_total") {
-                chart_deleted_pods_total = Number(metric[1]);
+                globalState.set('chart_deleted_pods_total') = Number(metric[1]);
                 $('#deleted_pods_total').text(metric[1]);            
             }
             else if (metric[0] == "fewer_replicas_seconds") {
-                chart_fewer_replicas_seconds = Number(metric[1]);
+                globalState.set('chart_fewer_replicas_seconds') = Number(metric[1]);
                 $('#fewer_replicas_seconds').text(metric[1]);            
             }
             else if (metric[0] == "latest_fewer_replicas_seconds") {
-                chart_latest_fewer_replicas_seconds = Number(metric[1]);
+                globalState.set('chart_latest_fewer_replicas_seconds') = Number(metric[1]);
                 $('#latest_fewer_replicas_seconds').text(metric[1]);            
             }
             else if (metric[0] == "pods_not_running_on_selected_ns") {
-                chart_pods_not_running_on = Number(metric[1]);
+                globalState.set('chart_pods_not_running_on') = Number(metric[1]);
                 $('#pods_not_running_on').text(metric[1]);            
             }
-            else if (metric[0] == "pods_match_regex:" + random_code) {
+            else if (metric[0] == "pods_match_regex:" + globalState.get('random_code')) {
                 $('#pods_match_regex').text(metric[1]);            
             }
             else if (metric[0].match(chaos_job_regex)) {
                 metrics_split = metric[0].split(":");
-                chaos_jobs_status.set(metrics_split[1] + ":" + metrics_split[2] + ":" +  metrics_split[3], metric[1]);
+                globalState.get('chaos_jobs_status').set(metrics_split[1] + ":" + metrics_split[2] + ":" +  metrics_split[3], metric[1]);
             }
             else if (metric[0] == "current_chaos_job_pod") {
-                chart_current_chaos_job_pod = Number(metric[1]);
+                globalState.set('chart_current_chaos_job_pod') = Number(metric[1]);
                 $('#current_chaos_job_pod').text(metric[1]);
             }
         }
     };;
-    oReq.open("GET", k8s_url + "/metrics");
+
+    oReq.open("GET", globalState.get('k8s_url') + "/metrics");
     oReq.send();
 }
 
 function getChaosJobsPodsPhase() {
     var oReq = new XMLHttpRequest();
+    let metrics_split = [];
+    let metric = [];
     oReq.onload = function () {
         var lines = this.responseText.split('\n');
-        for (var i = 0;i < lines.length;i++){
+        for (var i = 0; i < lines.length; i++) {
             metric = lines[i].split(' ');
 
             if (metric[0].match(chaos_job_regex)) {
                 metrics_split = metric[0].split(":");
-                chaos_jobs_status.set(metrics_split[1] + ":" + metrics_split[2] + ":" +  metrics_split[3], metric[1]);
+                globalState.get('chaos_jobs_status').set(metrics_split[1] + ":" + metrics_split[2] + ":" + metrics_split[3], metric[1]);
             }
         }
-    };;
-    oReq.open("GET", k8s_url + "/chaos_jobs_pod_phase");
+    };
+    oReq.open("GET", globalState.get('k8s_url') + "/chaos_jobs_pod_phase");
     oReq.send();
 }
 
 function scroll_backwards() {
-    if (chaos_logs_pos > 0){
-        chaos_logs_pos = chaos_logs_pos -1;
-        $('#current_log_pos').text(chaos_logs_pos);
+    if (globalState.get('chaos_logs_pos') > 0){
+        globalState.set('chaos_logs_pos', globalState.get('chaos_logs_pos') - 1);
+        $('#current_log_pos').text(globalState.get('chaos_logs_pos'));
         getChaosJobsLogs();
     } 
 }
@@ -193,7 +180,7 @@ function getTotalLogsPos() {
     var oReq = new XMLHttpRequest();
     oReq.onreadystatechange = function () {
         if (this.readyState === XMLHttpRequest.DONE && this.status === 200) {
-            if (log_tail_switch) {
+            if (globalState.get('log_tail_switch')) {
                 if (this.responseText.trim() == "null") {
                     $('#total_logs_pos').text("0");
                 } else {
@@ -201,14 +188,14 @@ function getTotalLogsPos() {
                 }
             }
         }
-    };;
-    oReq.open("GET", k8s_url + "/chaos/logs/count?logid=" + random_code);
+    };
+    oReq.open("GET", globalState.get('k8s_url') + "/chaos/logs/count?logid=" + globalState.get('random_code'));
     oReq.send();
 }
 
 function scroll_forward() {
-    chaos_logs_pos = chaos_logs_pos + 1;
-    $('#current_log_pos').text(chaos_logs_pos);
+    globalState.set('chaos_logs_pos', globalState.get('chaos_logs_pos') + 1);
+    $('#current_log_pos').text(globalState.get('chaos_logs_pos'));
     getChaosJobsLogs();
 }
 
@@ -216,7 +203,7 @@ function getChaosJobsLogs() {
     var oReq = new XMLHttpRequest();
     oReq.onreadystatechange = function () {
         if (this.readyState === XMLHttpRequest.DONE && this.status === 200) {
-            if (log_tail_switch) {
+            if (globalState.get('log_tail_switch')) {
                 if (this.responseText.trim() == "null") {
                     document.getElementById("logTailDiv").innerHTML = "Logs has been cleaned...";
                 } else {
@@ -225,8 +212,8 @@ function getChaosJobsLogs() {
                 }
             }
         }
-    };;
-    oReq.open("GET", k8s_url + "/chaos/logs?logid=" + random_code + "&pos=" + chaos_logs_pos);
+    };
+    oReq.open("GET", globalState.get('k8s_url') + "/chaos/logs?logid=" + globalState.get('random_code') + "&pos=" + globalState.get('chaos_logs_pos'));
     oReq.send();
     keepAliveJobsLogs();
 }
@@ -239,8 +226,8 @@ function keepAliveJobsLogs() {
                 $('#alert_placeholder3').replaceWith(log_tail_alert_no_pixel + this.responseText.replace("nil", "") + '</div>');
             }
         }
-    };;
-    oReq.open("GET", k8s_url + "/chaos/logs/keepalive?logid=" + random_code + "&pos=" + chaos_logs_pos);
+    };
+    oReq.open("GET", globalState.get('k8s_url') + "/chaos/logs/keepalive?logid=" + globalState.get('random_code') + "&pos=" + globalState.get('chaos_logs_pos'));
     oReq.send();
 }
 
@@ -248,42 +235,42 @@ function runKubeLinter() {
     var oReq = new XMLHttpRequest();
     oReq.onload = function () {
         kubelinter = this.responseText;
-        $('#alert_placeholder').replaceWith(alert_div + "KubeLinter executed correctly on namespace " + namespace +  ". Changing Regex and activating logs tail.</div>");
+        $('#alert_placeholder').replaceWith(alert_div + "KubeLinter executed correctly on namespace " + globalState.get('namespace') +  ". Changing Regex and activating logs tail.");
         enableLogTail();
         setLogRegex();
 
-        $('#logTailRegex').val('{"since": "60", "pod":".*", "namespace":"' + namespace + '", "labels":".*", "annotations":".*", "containers":".*"}');
+        $('#logTailRegex').val('{"since": "60", "pod":".*", "namespace":"' + globalState.get('namespace') + '", "labels":".*", "annotations":".*", "containers":".*"}');
         
-        if (!log_tail_switch) {
+        if (!globalState.get('log_tail_switch')) {
             setLogConsole(); 
         }
-    };;
+    };
 
-    $('#currentKubeLinterResult').text('KubeLinter launched. Set this regex and start log tail: {"since": "60", "pod":".*", "namespace":"' + namespace + '", "labels":".*", "annotations":".*", "containers":".*"}');
+    $('#currentKubeLinterResult').text('KubeLinter launched. Set this regex and start log tail: {"since": "60", "pod":".*", "namespace":"' + globalState.get('namespace') + '", "labels":".*", "annotations":".*", "containers":".*"}');
 
-    oReq.open("GET", k8s_url + "/kube/kube-linter?logid=" + random_code +"&namespace=" + namespace);
+    oReq.open("GET", globalState.get('k8s_url') + "/kube/kube-linter?logid=" + globalState.get('random_code') +"&namespace=" + globalState.get('namespace'));
     oReq.send();
 }
 
 function getNamespaces() {
     var oReq = new XMLHttpRequest();
     oReq.onload = function () {
-        namespaces = this.responseText;
-        namespaces = namespaces.split(",");
-        namespace = namespaces[namespaces_index];
-        console.log("[CURRENT-NAMESPACE] " + namespace);
-        $('#currentGameNamespace').text(namespace);
-    };;
-    oReq.open("GET", k8s_url + "/kube/namespaces");
+        let namespaces = this.responseText.split(",");
+        globalState.set('namespaces', namespaces);
+        globalState.set('namespace', namespaces[globalState.get('namespaces_index')]);
+        console.log("[CURRENT-NAMESPACE] " + globalState.get('namespace'));
+        $('#currentGameNamespace').text(globalState.get('namespace'));
+    };
+    oReq.open("GET", globalState.get('k8s_url') + "/kube/namespaces");
     oReq.send();
 }
 
 function getEndpoint() {
     var oReq = new XMLHttpRequest();
     oReq.onload = function () {
-        endpoint = this.responseText;
-    };;
-    oReq.open("GET", k8s_url + "/kube/endpoint");
+        globalState.set('endpoint', this.responseText);
+    };
+    oReq.open("GET", globalState.get('k8s_url') + "/kube/endpoint");
     oReq.send();
 }
 
@@ -294,19 +281,19 @@ function getCurrentChaosContainer() {
         $('#currentChaosContainerYaml').text(job_parsed);
         editor_chaos_container_definition.setValue(job_parsed);
         editor_chaos_container_definition.refresh();  
-    };;
-    oReq.open("GET", k8s_url + "/kube/chaos/containers?action=container_definition");
+    };
+    oReq.open("GET", globalState.get('k8s_url') + "/kube/chaos/containers?action=container_definition");
     oReq.send();
 }
 
 function enableLogTail() {
     var oReq = new XMLHttpRequest();
-    oReq.open("POST", k8s_url + "/kube/chaos/containers?action=enable_log_tail&id=" + random_code, true);
+    oReq.open("POST", globalState.get('k8s_url') + "/kube/chaos/containers?action=enable_log_tail&id=" + globalState.get('random_code'), true);
     oReq.onreadystatechange = function () {
         if (this.readyState === XMLHttpRequest.DONE && this.status === 200) {
             $('#alert_placeholder3').replaceWith(log_tail_alert + 'Logs tail started </div>');
         }
-    };;
+    };
     oReq.setRequestHeader("Content-Type", "application/json");
     oReq.send("{}");
     setLogRegex();
@@ -314,27 +301,26 @@ function enableLogTail() {
 
 function disableLogTail() {
     var oReq = new XMLHttpRequest();
-    oReq.open("POST", k8s_url + "/kube/chaos/containers?action=disable_log_tail&id=" + random_code, true);
+    oReq.open("POST", globalState.get('k8s_url') + "/kube/chaos/containers?action=disable_log_tail&id=" + globalState.get('random_code'), true);
     oReq.onreadystatechange = function () {
         if (this.readyState === XMLHttpRequest.DONE && this.status === 200) {
             $('#alert_placeholder3').replaceWith(log_tail_alert + 'Logs tail stopped </div>');
         }
-    };;
+    };
     oReq.setRequestHeader("Content-Type", "application/json");
-    // TODO: send payload for auth...
-    oReq.send("foobar");
+    oReq.send("{}");
 }
 
 function setLogRegex() {
     log_tail_div.style.display = "block";
     $('#alert_placeholder3').replaceWith(log_tail_alert + 'Setting regex for filtering log source (by pod name)</div>');
     var oReq = new XMLHttpRequest();
-    oReq.open("POST", k8s_url + "/kube/chaos/containers?action=set_log_regex&id=" + random_code, true);
+    oReq.open("POST", globalState.get('k8s_url') + "/kube/chaos/containers?action=set_log_regex&id=" + globalState.get('random_code'), true);
     oReq.onreadystatechange = function () {
         if (this.readyState === XMLHttpRequest.DONE && this.status === 200) {
             $('#alert_placeholder3').replaceWith(log_tail_alert + 'New regex has been configured</div>');
         }
-    };;
+    };
     oReq.setRequestHeader("Content-Type", "application/json");
     oReq.send($('#logTailRegex').val());
 }
@@ -345,13 +331,13 @@ function setChaosContainer() {
     }
     else {
         var oReq = new XMLHttpRequest();
-        oReq.open("POST", k8s_url + "/kube/chaos/containers?action=set", true);
+        oReq.open("POST", globalState.get('k8s_url') + "/kube/chaos/containers?action=set", true);
 
         oReq.onreadystatechange = function () {
             if (this.readyState === XMLHttpRequest.DONE && this.status === 200) {
                 $('#alert_placeholder2').text('New container definition has been saved.');
             }
-        };;
+        };
         oReq.setRequestHeader("Content-Type", "application/json");
         oReq.send(currentChaosContainerJsonTextAreaVal());
     }
@@ -361,9 +347,9 @@ function startChaosNode(node_name) {
     var oReq = new XMLHttpRequest();
     oReq.onload = function () {
         $('#alert_placeholder').replaceWith(alert_div + 'Latest action: Launched chaos job against ' + node_name + '</div>');
-    };;
+    };
     $('#alert_placeholder').replaceWith(alert_div + 'Latest action: Start chaos job against ' + node_name + '</div>');
-    oReq.open("GET", k8s_url + "/kube/chaos/nodes?nodename=" + node_name + "&namespace=" + namespace);
+    oReq.open("GET", globalState.get('k8s_url') + "/kube/chaos/nodes?nodename=" + node_name + "&namespace=" + globalState.get('namespace'));
     oReq.send();
 }
 
@@ -371,66 +357,66 @@ function deletePods(pod_name) {
     var oReq = new XMLHttpRequest();
     oReq.onload = function () {
         $('#alert_placeholder').replaceWith(alert_div + 'Latest action: Kill ' + pod_name + '</div>');
-    };;
-    oReq.open("GET", k8s_url + "/kube/pods?action=delete&pod_name=" + pod_name + "&namespace=" + namespace);
+    };
+    oReq.open("GET", globalState.get('k8s_url') + "/kube/pods?action=delete&pod_name=" + pod_name + "&namespace=" + globalState.get('namespace'));
     oReq.send();
 }
 
 function getPods() {
-    if (chaos_pods) {
+    if (globalState.get('chaos_pods')) {
         var oReq = new XMLHttpRequest();
         oReq.onload = function () {
             new_pods = JSON.parse(this.responseText)["items"];
 
             // Pod might just be killed in game, but not terminated in k8s yet.
             for (i=0; i<new_pods.length; i++) {
-                if (aliens.some((alien) => alien.name == new_pods[i].name && alien.status == "killed")) {
+                if (globalState.get('aliens').some((alien) => alien.name == new_pods[i].name && alien.status == "killed")) {
                     new_pods[i].status = "killed";
                 }
             }
 
-            if (nodes && nodes.length > 0) {
-                pods = new_pods.concat(nodes);
+            if (globalState.get('nodes') && globalState.get('nodes').length > 0) {
+                globalState.set('pods', new_pods.concat(globalState.get('nodes')));
             } else {
-                pods = new_pods;
+                globalState.set('pods', new_pods);
             }
-        };;
-        oReq.open("GET", k8s_url + "/kube/pods?action=list&namespace=" + namespace);
+        };
+        oReq.open("GET", globalState.get('k8s_url') + "/kube/pods?action=list&namespace=" + globalState.get('namespace'));
         oReq.send();
     }
     else {
-        if (nodes && nodes.length > 0) {
-            pods = nodes;
+        if (globalState.get('nodes') && globalState.get('nodes').length > 0) {
+            globalState.set('pods', globalState.get('nodes'));
         } else {
-            pods = [];
+            globalState.set('pods', []);
         }    
     }
 }
 
 function getNodes() {
-    if (chaos_nodes) {
+    if (globalState.get('chaos_nodes')) {
         var oReq = new XMLHttpRequest();
         oReq.onload = function () {
             json_parsed = JSON.parse(this.responseText);
-            nodes = json_parsed["items"];
-        };;
-        oReq.open("GET", k8s_url + "/kube/nodes");
+            globalState.set('nodes', json_parsed["items"]);
+        };
+        oReq.open("GET", globalState.get('k8s_url') + "/kube/nodes");
         oReq.send();
     }
     else {
-        nodes = []
+        globalState.set('nodes', []);
     }
 }
 
 window.setInterval(function getKubeItems() {
-    if (game_mode_switch) {
+    if (globalState.get('game_mode_switch')) {
         getNodes();
         getPods();
     }
-}, 500)
+}, 500);
 
 function keyDownHandler(e) {
-    if (!modal_opened && game_mode_switch) {
+    if (!globalState.get('modal_opened') && globalState.get('game_mode_switch')) {
         e.preventDefault();
         if (e.key == "Right" || e.key == "ArrowRight") {
             rightPressed = true;
@@ -450,12 +436,12 @@ function keyDownHandler(e) {
                 $('#alert_placeholder').replaceWith(alert_div + 'Latest action: Disable shuffle</div>');
             }
             else {
-                shuffle = true
+                shuffle = true;
                 $('#alert_placeholder').replaceWith(alert_div + 'Latest action: Enable shuffle</div>');
             }
         }
         else if (e.keyCode == 32) {
-            shot = true
+            shot = true;
         }
         else if (e.keyCode == 78) {
             switchNamespace();
@@ -465,33 +451,31 @@ function keyDownHandler(e) {
                 help = false;
             }
             else {
-                help = true
+                help = true;
             }
         }
         else if (e.keyCode == 67) {
-
             if (is_demo_mode()) {
                 demo_mode_alert();
                 return;
             }
 
-            if (chaos_nodes) {
-                chaos_nodes = false;
+            if (globalState.get('chaos_nodes')) {
+                globalState.set('chaos_nodes', false);
                 $('#alert_placeholder').replaceWith(alert_div + 'Latest action: Hide nodes</div>');
-
             }
             else {
-                chaos_nodes = true
+                globalState.set('chaos_nodes', true);
                 $('#alert_placeholder').replaceWith(alert_div + 'Latest action: Show nodes</div>');
             }
         }
         else if (e.keyCode == 80) {
-            if (chaos_pods) {
-                chaos_pods = false;
+            if (globalState.get('chaos_pods')) {
+                globalState.set('chaos_pods', false);
                 $('#alert_placeholder').replaceWith(alert_div + 'Latest action: Hide pods</div>');
             }
             else {
-                chaos_pods = true
+                globalState.set('chaos_pods', true);
                 $('#alert_placeholder').replaceWith(alert_div + 'Latest action: Show pods</div>');
             }
         }
@@ -515,7 +499,7 @@ function keyUpHandler(e) {
 
 function drawAlien(alienX, alienY, name, status) {
     var image = new Image(); // Image constructor
-    if (nodes.some((node) => node.name == name)) {
+    if (globalState.get('nodes').some((node) => node.name == name)) {
         image.src = './images/k8s_node.png';
         ctx.drawImage(image, alienX, alienY, 30, 40);
     }
@@ -523,7 +507,7 @@ function drawAlien(alienX, alienY, name, status) {
         image.src = `./images/sprite_invader_${status}.png`;
         ctx.font = '8px pixel';
         ctx.drawImage(image, alienX, alienY, 40, 40);
-        if (showPodName) {
+        if (globalState.get('showPodName')) {
             ctx.fillText(name.substring(0, 19) + '..', alienX, alienY + 40);
         }
     }
@@ -531,43 +515,43 @@ function drawAlien(alienX, alienY, name, status) {
 }
 
 function checkRocketAlienCollision() {
-    if (contains(aliensY, rocketY)) {
+    if (contains(globalState.get('aliensY'), rocketY)) {
         var i;
-        for (i=aliens.length - 1; i >= 0; i--) {
-            if (aliens[i]["active"] && (rocketY - aliens[i]["y"] < 5)) {
+        for (i = globalState.get('aliens').length - 1; i >= 0; i--) {
+            if (globalState.get('aliens')[i]["active"] && (rocketY - globalState.get('aliens')[i]["y"] < 5)) {
                 var rangeX = []
-                rangeX.push(aliens[i]["x"]);
+                rangeX.push(globalState.get('aliens')[i]["x"]);
 
-                for (k=aliens[i]["x"]; k<aliens[i]["x"]+aliensWidth; k++) {
+                for (k = globalState.get('aliens')[i]["x"]; k < globalState.get('aliens')[i]["x"] + aliensWidth; k++) {
                     rangeX.push(k);
                 }
-                
+
                 if (contains(rangeX, rocketX)) {
                     collisionDetected = true;
-                    aliens[i]["status"] = "killed";
+                    globalState.get('aliens')[i]["status"] = "killed";
                     // Aliens might be updated before new pods are fetched
-                    for (j=0; j<pods.length; j++) {
-                        if (pods[j].name == aliens[i].name) {
-                            pods[j].status = "killed";
+                    for (j = 0; j < globalState.get('pods').length; j++) {
+                        if (globalState.get('pods')[j].name == globalState.get('aliens')[i].name) {
+                            globalState.get('pods')[j].status = "killed";
                         }
                     }
-                    if (nodes.some((node) => node.name == aliens[i]["name"])) {
-                        aliens[i]["active"] = false;
-                        startChaosNode(aliens[i]["name"]);
+                    if (globalState.get('nodes').some((node) => node.name == globalState.get('aliens')[i]["name"])) {
+                        globalState.get('aliens')[i]["active"] = false;
+                        startChaosNode(globalState.get('aliens')[i]["name"]);
                     }
                     else {
-                        deletePods(aliens[i]["name"]);
+                        deletePods(globalState.get('aliens')[i]["name"]);
                     }
                     return true;
                 }
             }
-        } 
+        }
     }
     return false;
 }
 
 function shuffleAliens() {
-    pods = pods.sort(() => Math.random() - 0.5)
+    globalState.set('pods', globalState.get('pods').sort(() => Math.random() - 0.5));
 }
 
 function drawRocket() {
@@ -607,7 +591,7 @@ function drawSpaceship() {
 }
 
 window.setInterval(function draw() {
-    if (namespacesJumpFlag){
+    if (globalState.get('namespacesJumpFlag')) {
         randNamespaceJump(1, 10, 8);
     }
 }, 1000)
@@ -615,45 +599,45 @@ window.setInterval(function draw() {
 window.setInterval(function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    for (i=0; i<aliens.length; i++) {
-        if (aliens[i]["active"]) {
-            drawAlien(aliens[i]["x"], aliens[i]["y"], aliens[i]["name"], aliens[i]["status"]);
+    for (i = 0; i < globalState.get('aliens').length; i++) {
+        if (globalState.get('aliens')[i]["active"]) {
+            drawAlien(globalState.get('aliens')[i]["x"], globalState.get('aliens')[i]["y"], globalState.get('aliens')[i]["name"], globalState.get('aliens')[i]["status"]);
         }
     }
     drawSpaceship();
-    
+
     if (shot && !collisionDetected) {
         drawRocket();
     }
 
-    if (x + dx > canvas.width-ballRadius || x + dx < ballRadius) {
+    if (x + dx > canvas.width - ballRadius || x + dx < ballRadius) {
         dx = -dx;
     }
-    if (y + dy > canvas.height-ballRadius || y + dy < ballRadius) {
+    if (y + dy > canvas.height - ballRadius || y + dy < ballRadius) {
         dy = -dy;
     }
-    
-    if (autoPilot){
+
+    if (globalState.get('autoPilot')) {
         spaceshipY = 340;
-        
+
         if (getRandomInt(100) < randomFactor) {
             shot = true;
         }
-        
+
         if (autoPilotDirection == 0) {
-            autoPilotDirection = getRandomInt(canvas.width-spaceshipWidth);
+            autoPilotDirection = getRandomInt(canvas.width - spaceshipWidth);
             spaceshipxOld = spaceshipX;
-        } 
+        }
         else if ((spaceshipX == autoPilotDirection)) {
-            autoPilotDirection = getRandomInt(canvas.width-spaceshipWidth);
+            autoPilotDirection = getRandomInt(canvas.width - spaceshipWidth);
             spaceshipxOld = spaceshipX;
         }
         else if ((autoPilotDirection < spaceshipxOld) && (spaceshipX < autoPilotDirection)) {
-            autoPilotDirection = getRandomInt(canvas.width-spaceshipWidth);
+            autoPilotDirection = getRandomInt(canvas.width - spaceshipWidth);
             spaceshipxOld = spaceshipX;
         }
         else if ((autoPilotDirection > spaceshipxOld) && (spaceshipX > autoPilotDirection)) {
-            autoPilotDirection = getRandomInt(canvas.width-spaceshipWidth);
+            autoPilotDirection = getRandomInt(canvas.width - spaceshipWidth);
             spaceshipxOld = spaceshipX;
         }
         else {
@@ -696,14 +680,14 @@ window.setInterval(function draw() {
     ctx.fillStyle = 'white';
     ctx.font = '16px pixel';
 
-    ctx.fillText('Cluster: ' + endpoint, 10, startYforHelp);
-    ctx.fillText('Current Namespace: ' + namespace, 10, startYforHelp + 20);
-    ctx.fillText('Alien Shuffle: ' + shuffle, 10, startYforHelp + 40);
-    ctx.fillText('Auto Namespaces Switch: ' + namespacesJumpStatus, 10, startYforHelp + 60);
+    ctx.fillText('Cluster: ' + globalState.get('endpoint'), 10, startYforHelp);
+    ctx.fillText('Current Namespace: ' + globalState.get('namespace'), 10, startYforHelp + 20);
+    ctx.fillText('Alien Shuffle: ' + globalState.get('shuffle'), 10, startYforHelp + 40);
+    ctx.fillText('Auto Namespaces Switch: ' + globalState.get('namespacesJumpStatus'), 10, startYforHelp + 60);
 
     ctx.fillText('press \'h\' for help!', 10, startYforHelp + 80);
 
-    if (help) {
+    if (globalState.get('help')) {
         ctx.fillText('h => Activate or deactivate help', 10, 280);
         ctx.fillText('s => Activate or deactivate shuffle for aliens', 10, 300);
         ctx.fillText('n => Change namespace', 10, 320);
@@ -713,46 +697,46 @@ window.setInterval(function draw() {
 }, 10)
 
 function buttonShuffleHelper() {
-    if (shuffle) {
-        shuffle = false;
+    if (globalState.get('shuffle')) {
+        globalState.set('shuffle', false);
         $('#alert_placeholder').replaceWith(alert_div + 'Latest action: Shuffle Disable</div>');
         $("#buttonShuffle").text("Enable Shuffle");
     }
     else {
-        shuffle = true
+        globalState.set('shuffle', true);
         $('#alert_placeholder').replaceWith(alert_div + 'Latest action: Shuffle Enabled</div>');
         $("#buttonShuffle").text("Disable Shuffle");
     }
 }
 
 function namespacesJumpControl() {
-    if (namespacesJumpFlag) {
-        namespacesJumpFlag = false;
+    if (globalState.get('namespacesJumpFlag')) {
+        globalState.set('namespacesJumpFlag', false);
         $("#namespacesJumpButton").text("Enable Auto NS Switch");
         $('#alert_placeholder').replaceWith(alert_div + 'Latest action: Disabled automatic switch of namespace</div>');
-        namespacesJumpStatus = 'Disabled'
+        globalState.set('namespacesJumpStatus', 'Disabled');
     } else {
-        namespacesJumpFlag = true;
+        globalState.set('namespacesJumpFlag', true);
         $("#namespacesJumpButton").text("Disable Auto NS Switch");
         $('#alert_placeholder').replaceWith(alert_div + 'Latest action: Enabled automatic switch of namespace </div>');
-        namespacesJumpStatus = 'Enabled'
+        globalState.set('namespacesJumpStatus', 'Enabled');
     }
 }
 
 function showPodNameControl() {
-    if (showPodName) {
-        showPodName = false;
+    if (globalState.get('showPodName')) {
+        globalState.set('showPodName', false);
         $("#buttonOnlyPodName").text("Show Pods Name");
     }
     else {
-        showPodName = true
+        globalState.set('showPodName', true);
         $("#buttonOnlyPodName").text("Hide Pods Name");
     }
 }
 
 function podExists(podName) {
-    for (i=0; i<aliens.length; i++) {
-        if (aliens[i]["name"] == podName) {
+    for (i = 0; i < globalState.get('aliens').length; i++) {
+        if (globalState.get('aliens')[i]["name"] == podName) {
             return true;
         }
     }
@@ -760,8 +744,8 @@ function podExists(podName) {
 }
 
 function findReplace() {
-    for (i=0; i<aliens.length; i++) {
-        if (!aliens[i]["active"]) {
+    for (i = 0; i < globalState.get('aliens').length; i++) {
+        if (!globalState.get('aliens')[i]["active"]) {
             return i;
         }
     }
@@ -776,27 +760,33 @@ function randNamespaceJump(min, max, jumpRandomFactor) {
 }
 
 window.setInterval(function setAliens() {
-    if (shuffle) {
-        pods = pods.sort(() => Math.random() - 0.5)
+    if (globalState.get('shuffle')) {
+        globalState.set('pods', globalState.get('pods').sort(() => Math.random() - 0.5));
     }
 
-    aliens = [];
-    if (pods.length > 0) {
-        for (k=10; k>0; k--) {
-            if (!contains(aliensY, k)) {
-                aliensY.push(k);
+    globalState.set('aliens', []);
+    if (globalState.get('pods').length > 0) {
+        for (k = 10; k > 0; k--) {
+            if (!contains(globalState.get('aliensY'), k)) {
+                globalState.get('aliensY').push(k);
             }
         }
         var x = 10;
         var y = 10;
         var yInc = false;
 
-        for (i=0; i<pods.length; i++) {
-            if (!podExists(pods[i].name)) {
+        for (i = 0; i < globalState.get('pods').length; i++) {
+            if (!podExists(globalState.get('pods')[i].name)) {
                 var replaceWith = findReplace();
                 if (replaceWith != -1) {
-                    aliens[replaceWith] = {"name": pods[i].name, "status": pods[i].status, "x": aliens[replaceWith]["x"], "y": aliens[replaceWith]["y"], "active": true}
-                    cnt =+ 1;
+                    globalState.get('aliens')[replaceWith] = {
+                        "name": globalState.get('pods')[i].name,
+                        "status": globalState.get('pods')[i].status,
+                        "x": globalState.get('aliens')[replaceWith]["x"],
+                        "y": globalState.get('aliens')[replaceWith]["y"],
+                        "active": true
+                    }
+                    cnt = +1;
                 }
                 else {
                     if (!yInc) {
@@ -807,15 +797,21 @@ window.setInterval(function setAliens() {
                         y -= 20;
                         yInc = false;
                     }
-                    aliens.push({"name": pods[i].name, "status": pods[i].status, "x": x, "y": y, "active": true});
-                    cnt =+ 1;
+                    globalState.get('aliens').push({
+                        "name": globalState.get('pods')[i].name,
+                        "status": globalState.get('pods')[i].status,
+                        "x": x,
+                        "y": y,
+                        "active": true
+                    });
+                    cnt = +1;
                 }
-                if (aliens.length % maxAliensPerRow == 0) {
+                if (globalState.get('aliens').length % maxAliensPerRow == 0) {
                     x = 10;
                     y += aliensIncrementY;
-                    for (k=y+10; k>=y; k--) {
-                        if (!contains(aliensY, k)) {
-                            aliensY.push(k);
+                    for (k = y + 10; k >= y; k--) {
+                        if (!contains(globalState.get('aliensY'), k)) {
+                            globalState.get('aliensY').push(k);
                         }
                     }
                 }
@@ -829,31 +825,31 @@ window.setInterval(function setAliens() {
 
 window.setInterval(function backgroundTasks() {
 
-    if (!codename_configured) {
+    if (!globalState.get('codename_configured')) {
         chaosProgram = $('#chaosProgramTextArea').val();
-        chaosProgramWithCodename = chaosProgram.replace(codename_regex, "chaos-codename: " + codename);
+        chaosProgramWithCodename = chaosProgram.replace(codename_regex, "chaos-codename: " + globalState.get('codename'));
         $('#chaosProgramTextArea').val(chaosProgramWithCodename);
         $('#chaosProgramTextArea').text(chaosProgramWithCodename);
         chaosProgram = chaosProgramWithCodename;
-        codename_configured = true;
+        globalState.set('codename_configured', true);
     }
 
-    if (game_mode_switch || programming_mode_switch || log_tail_switch) {
+    if (globalState.get('game_mode_switch') || globalState.get('programming_mode_switch') || globalState.get('log_tail_switch')) {
         getMetrics();
         getChaosJobsPodsPhase();
         updateMainMetricsChart();
     }
 
-    if (log_tail_switch) {
-	    getChaosJobsLogs();
+    if (globalState.get('log_tail_switch')) {
+        getChaosJobsLogs();
         getTotalLogsPos();
     }
-    
-    if (programming_mode_switch && chaos_program_valid) {
+
+    if (globalState.get('programming_mode_switch') && globalState.get('chaos_program_valid')) {
         drawChaosProgramFlow();
     }
-    
-    if (chaos_report_switch) {
+
+    if (globalState.get('chaos_report_switch')) {
         updateElapsedTimeArray(chaosReportprojectName);
         updateChaosReportStartTime(chaosReportprojectName);
         drawCanvasHTTPStatusCodeStats();
@@ -881,5 +877,5 @@ document.getElementById("metricsPresetsRow").style.opacity = 1;
 
 // TO DO: Apply also when modals are opened
 $('.modal').on('hidden.bs.modal', function () {
- setModalState(false);
+    setModalState(false);
 });

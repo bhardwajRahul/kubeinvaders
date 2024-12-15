@@ -133,28 +133,7 @@ class GlobalState {
         "Connection Error": 1,
         "Other": 1
       },
-    };
-
-    // Proxy per rendere le proprietà direttamente globali
-    const proxy = new Proxy(this.state, {
-      get: (target, prop) => {
-        if (prop in target) {
-          window[prop] = target[prop]; // Esponi direttamente la proprietà nell'oggetto globale `window`
-          return target[prop];
-        } else {
-          console.warn(`Property ${prop} not found!`);
-          return undefined;
-        }
-      },
-      set: (target, prop, value) => {
-        target[prop] = value;
-        window[prop] = value; // Assicura che la proprietà venga aggiornata anche nel `window`
-        return true;
-      }
-    });
-
-    // Sovrascrivi lo stato con il proxy
-    this.state = proxy;
+    }
   }
 
   get(key) {
@@ -170,5 +149,21 @@ class GlobalState {
 var canvas = document.getElementById("myCanvas");
 var ctx = canvas.getContext("2d");
 
+var editor_chaos_container_definition = CodeMirror.fromTextArea(currentChaosContainerJsonTextArea, {
+  lineNumbers: true,
+  theme: "dracula",
+  mode: "javascript"
+});
+
 window.GlobalState = GlobalState;
 const globalState = new window.GlobalState();
+
+function printGlobalState() {
+  for (const key in globalState.state) {
+    if (globalState.state.hasOwnProperty(key)) {
+      console.log(`${key}: ${globalState.state[key]}`);
+    }
+  }
+}
+
+printGlobalState();

@@ -19,10 +19,9 @@ and various game functionalities such as chaos engineering actions, metrics retr
 and user interactions.
 */
 
-
 function startGameMode() {
-  if (game_mode_switch) {
-    game_mode_switch = false;
+  if (globalState.get('game_mode_switch')) {
+    globalState.set('game_mode_switch', false);
     $("#gameModeButton").text("Enable Game Mode");
   } else {
     /* TO DO: DO BETTER :D */
@@ -32,13 +31,13 @@ function startGameMode() {
     let close_button = document.getElementById("closeButtonReport");
     close_button.innerHTML = "Skip";
     showPrepareChaosReportModal(checkbox);
-    game_mode_switch = true;
+    globalState.set('game_mode_switch', true);
     document.getElementById("gameContainer").style.width = "100%";
     document.getElementById("gameContainer").style.height = "100%";
     //document.getElementById("loadButtonGroup").style.width = "650px";
     $("#gameModeButton").text("Disable Game Mode");
     $("#programmingModeButton").text("Enable Prog. Mode");
-    programming_mode_switch = false;
+    globalState.set('programming_mode_switch', false);
   }
   if (game_buttons.style.display === "none") {
     game_buttons.style.display = "block";
@@ -62,16 +61,16 @@ function startProgrammingMode() {
     return;
   }
 
-  if (programming_mode_switch) {
-    programming_mode_switch = false;
+  if (globalState.get('programming_mode_switch')) {
+    globalState.set('programming_mode_switch', false);
     $("#programmingModeButton").text("Enable Prog. Mode");
   } else {
     document.getElementById("gameContainer").style.width = "100%";
     document.getElementById("gameContainer").style.height = "100%";
     document.getElementById("loadButtonGroup").style.width = "1250px";
 
-    programming_mode_switch = true;
-    game_mode_switch = false;
+    globalState.set('programming_mode_switch', true);
+    globalState.set('game_mode_switch', false);
     $("#gameModeButton").text("Enable Game Mode");
     $("#programmingModeButton").text("Disable Prog. Mode");
   }

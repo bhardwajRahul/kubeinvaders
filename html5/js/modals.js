@@ -21,11 +21,11 @@ and user interactions.
 
 /* Modals Switches */
 function setModalState(state) {
-  modal_opened = state;
+  globalState.set('modal_opened', state);
 }
 
 function showKubePingModal() {
-  if (!kubeping_sent) {
+  if (!globalState.get('kubeping_sent')) {
     $('#kubePingModal').modal('show');
   }
 

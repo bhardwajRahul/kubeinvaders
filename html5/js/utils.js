@@ -21,7 +21,7 @@ and user interactions.
 
 const demo_mode = globalState.get('demo_mode');
 const k8s_url = globalState.get('k8s_url');
-const kubeping_sent = globalState.get('kubeping_sent');
+let kubeping_sent = globalState.get('kubeping_sent');
 
 document.addEventListener("DOMContentLoaded", function() {
   setTimeout(function() {
@@ -58,7 +58,7 @@ function rand_id() {
 
 function formattedToday() {
   const today = new Date();
-  return today
+  return today;
 }
 
 function convertStringToArrayWithSeparator(str, separator) {
@@ -77,18 +77,17 @@ function sanitizeStringToURLFriendly(str) {
   return str.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase();
 }
 
-
 function kubePingModalSwitch() {
   var oReq = new XMLHttpRequest();
   oReq.onreadystatechange = function () {
       if (this.readyState === XMLHttpRequest.DONE && this.status === 200) {
         console.log("[K-INV STARTUP] kubeping status is: |" + this.responseText.trim() + "|");
         if (this.responseText.trim() == "Key not found" || is_demo_mode()) {
-          setModalState(true)
-          showKubePingModal()
+          setModalState(true);
+          showKubePingModal();
         }
       }
-  };;
+  };
 
   oReq.open("GET", k8s_url + "/chaos/redis/get?key=kubeping", true);
   oReq.send();
@@ -106,9 +105,9 @@ function setKubePingStatusPing(value) {
 
   oReq.onreadystatechange = function () {
       if (this.readyState === XMLHttpRequest.DONE && this.status === 200) {
-        kubeping_sent = true;
+        globalState.set('kubeping_sent', true);
       }
-  };;
+  };
   oReq.setRequestHeader("Content-Type", "application/text");
   oReq.send(String(value));
   closeKubePingModal();

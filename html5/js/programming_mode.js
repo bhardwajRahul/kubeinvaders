@@ -43,42 +43,42 @@ loadPresetsCodeJson = `{
 }`;
 
 function loadPreset(tool, lang) {
-  let decodedStringAtoB = "";
-  console.log("[GET-PRESETS] Loaded preset for " + tool + " with lang " + lang);
+    let decodedStringAtoB = "";
+    console.log("[GET-PRESETS] Loaded preset for " + tool + " with lang " + lang);
 
-  latest_preset_name = tool;
-  latest_preset_lang = lang;
-  console.log("[GET-PRESETS] |" + lang + "|");
+    globalState.set('latest_preset_name', tool);
+    globalState.set('latest_preset_lang', lang);
+    console.log("[GET-PRESETS] |" + lang + "|");
 
-  if (lang == "k-inv") {
-    loadSavedPreset(tool, lang, $('#chaosProgramTextArea').text());
-    if (tool.toLowerCase() == "default") {
-      document.getElementById("resetToDefaultButton").style.display = "none";
-      document.getElementById("deleteChaosProgramButton").style.display = "none";
+    if (lang == "k-inv") {
+        loadSavedPreset(tool, lang, $('#chaosProgramTextArea').text());
+        if (tool.toLowerCase() == "default") {
+            document.getElementById("resetToDefaultButton").style.display = "none";
+            document.getElementById("deleteChaosProgramButton").style.display = "none";
+        } else {
+            document.getElementById("resetToDefaultButton").style.display = "none";
+            document.getElementById("deleteChaosProgramButton").style.display = "block";
+        }
     } else {
-      document.getElementById("resetToDefaultButton").style.display = "none";
-      document.getElementById("deleteChaosProgramButton").style.display = "block";
+        console.log("[GET-PRESETS] foo Loaded preset for " + tool + " with lang " + lang);
+        console.log("[GET-PRESET] loadPresetsCodeJson " + loadPresetsCodeJson);
+        loadPresetsCodeParsed = JSON.parse(loadPresetsCodeJson);
+        decodedStringAtoB = atob(loadPresetsCodeParsed[tool]);
+        loadSavedPreset(tool, lang, decodedStringAtoB);
+        document.getElementById("resetToDefaultButton").style.display = "block";
+        document.getElementById("deleteChaosProgramButton").style.display = "none";
     }
-  } else {
-    console.log("[GET-PRESETS] foo Loaded preset for " + tool + " with lang " + lang);
-    console.log("[GET-PRESET] loadPresetsCodeJson " +loadPresetsCodeJson);
-    loadPresetsCodeParsed = JSON.parse(loadPresetsCodeJson);
-    decodedStringAtoB = atob(loadPresetsCodeParsed[tool]);
-    loadSavedPreset(tool, lang, decodedStringAtoB);
-    document.getElementById("resetToDefaultButton").style.display = "block";
-    document.getElementById("deleteChaosProgramButton").style.display = "none";
-  }
-  $("#presetLang").val(lang);
-  $("#presetName").val(tool);
-  $('#setLoadTestModal').modal('show');
-  modal_opened = true;
-  log_tail_switch = false;
-  log_tail_div.style.display = "none";
-  log_tail_screen.style.display = "none"
-  $("#logConsoleButton").text("Start Logs Tail");
-  if (programming_mode_switch == false) {
-    startProgrammingMode();
-  }
+    $("#presetLang").val(lang);
+    $("#presetName").val(tool);
+    $('#setLoadTestModal').modal('show');
+    globalState.set('modal_opened', true);
+    globalState.set('log_tail_switch', false);
+    globalState.set('log_tail_div.style.display', "none");
+    globalState.set('log_tail_screen.style.display', "none");
+    $("#logConsoleButton").text("Start Logs Tail");
+    if (globalState.get('programming_mode_switch') == false) {
+        startProgrammingMode();
+    }
 }
 
 function runChaosProgram() {
@@ -95,26 +95,23 @@ function runChaosProgram() {
   }
 
   var oReq = new XMLHttpRequest();
-  oReq.open("POST", k8s_url + "/kube/chaos/programming_mode?id=" + random_code, true);
+  oReq.open("POST", globalState.get('k8s_url') + "/kube/chaos/programming_mode?id=" + globalState.get('random_code'), true);
   oReq.onreadystatechange = function () {
       if (this.readyState === XMLHttpRequest.DONE && this.status == 200) {
-        //console.log("[PROGRAMMING_MODE] Chaos program loaded... HTTP Status code: " + this.status);
         now = new Date().toLocaleString().replace(',','')
         if (this.responseText.includes("Invalid")) {
-            replaceDivWithContent('alert_placeholder_programming_mode', alert_div + this.responseText + ' </div>');
-            chaos_program_valid = false;
+            replaceDivWithContent('alert_placeholder_programming_mode', globalState.get('alert_div') + this.responseText + ' </div>');
+            globalState.set('chaos_program_valid', false);
         }
         else {
-            // console.log("[PROGRAMMING_MODE] Write new status update of the latest loaded chaos program");
-            replaceDivWithContent('alert_placeholder_programming_mode', alert_div + '[PROGRAMMING_MODE] Chaos program ' + codename + ' loaded at ' + now + ' </div>');  
-            chaos_program_valid = true;
+            replaceDivWithContent('alert_placeholder_programming_mode', globalState.get('alert_div') + '[PROGRAMMING_MODE] Chaos program ' + codename + ' loaded at ' + now + ' </div>');  
+            globalState.set('chaos_program_valid', true);
         }  
     } 
     else if (this.readyState === XMLHttpRequest.DONE && this.status != 200) {
-        replaceDivWithContent('alert_placeholder_programming_mode', alert_div + "[PROGRAMMING_MODE] Invalid chaos program code, please check yaml syntax or kubeinvaders logs</div>");
-        // console.log("[PROGRAMMING_MODE] Error. HTTP return code: " + this.status);
+        replaceDivWithContent('alert_placeholder_programming_mode', globalState.get('alert_div') + "[PROGRAMMING_MODE] Invalid chaos program code, please check yaml syntax or kubeinvaders logs</div>");
     }
-  };;
+  };
   oReq.setRequestHeader("Content-Type", "application/json");
   console.log("Sending this program: " + getChaosProgTextAreaValue());
   oReq.send(getChaosProgTextAreaValue());
@@ -122,14 +119,17 @@ function runChaosProgram() {
 
 function savePreset(action) {
   console.log("[SAVE-PRESET-CHAOSPROGRAM] Saving item...");
-  var presetName = "";
+  let presetName = "";
+  let presetLang = "";
+  let presetBody = "";
+
   presetBody = $("#currentLoadTest").val();
   console.log("[SAVE-PRESET-CHAOSPROGRAM] Saving " + presetBody);
 
   if (action == "save-chaos-program") {
       presetLang = "k-inv";
       presetName = codename + "-" + rand_id();
-      latest_preset_lang = "k-inv";
+      globalState.set('latest_preset_lang') = "k-inv";
       console.log("[SAVE-PRESET-CHAOSPROGRAM] lang: " + presetLang + " name:" + presetName);
       presetBody =  $('#chaosProgramTextArea').text();
       document.getElementById("resetToDefaultButton").style.display = "none";
@@ -138,15 +138,15 @@ function savePreset(action) {
   else if (latest_preset_lang == "k-inv") {
       presetLang = "k-inv";
       presetName = codename;
-      latest_preset_lang = "k-inv";
+      globalState.set('latest_preset_lang') = "k-inv";
       console.log("[SAVE-PRESET-CHAOSPROGRAM] lang: " + presetLang + " name:" + codename);
       presetBody = $('#currentLoadTest').val();
       document.getElementById("resetToDefaultButton").style.display = "none";
       document.getElementById("deleteChaosProgramButton").style.display = "block";
   }
   else {
-      presetLang = latest_preset_lang;
-      presetName = latest_preset_name;    
+      presetLang = globalState.get('latest_preset_lang');
+      presetName = globalState.get('latest_preset_name');    
       document.getElementById("resetToDefaultButton").style.display = "block";
       document.getElementById("deleteChaosProgramButton").style.display = "none";
   }
@@ -154,11 +154,11 @@ function savePreset(action) {
   //console.log("Saving preset. name:" + presetName + ", lang:" + presetName + ", body: " + presetBody);
   var oReq = new XMLHttpRequest();
 
-  oReq.open("POST", k8s_url + "/chaos/loadpreset/save?name=" + presetName + "&lang=" + presetLang, true);
+  oReq.open("POST", globalState.get('k8s_url') + "/chaos/loadpreset/save?name=" + presetName + "&lang=" + presetLang, true);
 
   oReq.onreadystatechange = function () {
       if (this.readyState === XMLHttpRequest.DONE && this.status === 200 && (action == "apply" || action == "save-chaos-program")) {
-          if (latest_preset_lang == "k-inv") {
+          if (globalState.get('latest_preset_lang') == "k-inv") {
               if ($('#currentLoadTest').val() != "") {
                   presetBody = $('#currentLoadTest').val();
               }               
@@ -205,155 +205,142 @@ loop: 5`);
 
   getSavedPresets();
 
-  if (action == "apply" && programming_mode_switch == false){
+  if (action == "apply" && globalState.get('programming_mode_switch') == false){
       startProgrammingMode();
   }
 }
 
 function drawChaosProgramFlow() {
-  //var chaosProgram = "";
-  chaosProgram = getChaosProgTextAreaValue();
+    chaosProgram = getChaosProgTextAreaValue();
 
-  var oReq = new XMLHttpRequest();
-  oReq.open("POST", k8s_url + "/chaos/programs/json-flow", true);
+    var oReq = new XMLHttpRequest();
+    oReq.open("POST", k8s_url + "/chaos/programs/json-flow", true);
 
-  oReq.onreadystatechange = function () {
-      if (this.readyState === XMLHttpRequest.DONE && this.status === 200) {
-          if (IsJsonString(this.responseText)){
+    oReq.onreadystatechange = function () {
+            if (this.readyState === XMLHttpRequest.DONE && this.status === 200) {
+                    if (IsJsonString(this.responseText)){
 
-              if (this.responseText.includes("Invalid")) {
-                $('#alert_placeholder_programming_mode').replaceWith(alert_div + this.responseText + ' </div>');
-                chaos_program_valid = false;
-                return;
-              } 
-              
-              var flow = JSON.parse(this.responseText);
-            //   console.log("[DRAW-PROGRAM-FLOW] Drawing flow for " + codename);
-            //   console.log("[DRAW-PROGRAM-FLOW] Drawing: " + JSON.stringify(flow));
-              var flow_html = "";
-              let i = 0;
-              var times = "";
-              $('#chaosProgramFlow').html("");
+                            if (this.responseText.includes("Invalid")) {
+                                $('#alert_placeholder_programming_mode').replaceWith(alert_div + this.responseText + ' </div>');
+                                globalState.set('chaos_program_valid', false);
+                                return;
+                            } 
+                            
+                            var flow = JSON.parse(this.responseText);
+                            var flow_html = "";
+                            let i = 0;
+                            var times = "";
+                            $('#chaosProgramFlow').html("");
 
-              while (i < flow["experiments"].length) {
-                  if (flow["experiments"][i]["loop"] == 1){
-                      times = "once";
-                  }
-                  else if (flow["experiments"][i]["loop"] == 2) {
-                      times = "twice"
-                  }
-                  else {
-                      times = flow["experiments"][i]["loop"] + " times"
-                  }
-                  if (current_color_mode == "light") {
-                      flow_html = flow_html + '<div class="row"><div class="alert alert-light alert-kinv" id="' +  random_code + Math.floor(Math.random() * 9999) +'" role="alert" style="border-color: #000000; border-width: 1.5px;">Do ' + flow["experiments"][i]["name"] + ' ' + times + '</div></div>';
-                  }
-                  else {
-                      flow_html = flow_html + '<div class="row"><div class="alert alert-light alert-kinv" id="' +  random_code + Math.floor(Math.random() * 9999) +'" role="alert" style="border-color: #ffffff; color: #1ed931; background-color: #0a0a0a; border-width: 1.5px;">Do ' + flow["experiments"][i]["name"] + ' ' + times + '</div></div>';
-                  }
-                  search_job = codename + ":" + flow["experiments"][i]["name"]
+                            while (i < flow["experiments"].length) {
+                                    if (flow["experiments"][i]["loop"] == 1){
+                                            times = "once";
+                                    }
+                                    else if (flow["experiments"][i]["loop"] == 2) {
+                                            times = "twice"
+                                    }
+                                    else {
+                                            times = flow["experiments"][i]["loop"] + " times"
+                                    }
+                                    if (globalState.get('current_color_mode') == "light") {
+                                            flow_html = flow_html + '<div class="row"><div class="alert alert-light alert-kinv" id="' +  random_code + Math.floor(Math.random() * 9999) +'" role="alert" style="border-color: #000000; border-width: 1.5px;">Do ' + flow["experiments"][i]["name"] + ' ' + times + '</div></div>';
+                                    }
+                                    else {
+                                            flow_html = flow_html + '<div class="row"><div class="alert alert-light alert-kinv" id="' +  random_code + Math.floor(Math.random() * 9999) +'" role="alert" style="border-color: #ffffff; color: #1ed931; background-color: #0a0a0a; border-width: 1.5px;">Do ' + flow["experiments"][i]["name"] + ' ' + times + '</div></div>';
+                                    }
+                                    search_job = globalState.get('codename') + ":" + flow["experiments"][i]["name"]
 
-                  flow_html = flow_html + '<img src="images/down-arrow.png" width="30" height="30" style="margin-bottom: 2%;">';
+                                    flow_html = flow_html + '<img src="images/down-arrow.png" width="30" height="30" style="margin-bottom: 2%;">';
 
-                  for (let [key, value] of chaos_jobs_status) {
-                      if (key.search(search_job) != -1 ) {
-                          if (current_color_mode == "light") {
-                              flow_html = flow_html + '<div class="row"><div class="alert alert-light alert-kinv" id="' +  random_code + Math.floor(Math.random() * 9999) +'" role="alert" style="border-color: #000000; border-width: 1.5px;">[' + key.split(":")[2] + '] Status: ' + value + '</div></div>';
-                          } else {
-                              flow_html = flow_html + '<div class="row"><div class="alert alert-light alert-kinv" id="' +  random_code + Math.floor(Math.random() * 9999) +'" role="alert" style="border-color: #ffffff; color: #1ed931; background-color: #0a0a0a; border-width: 1.5px;">[' + key.split(":")[2] + '] Status: ' + value + '</div></div>';
-                          }
-                      }
-                  }
-                  i++;
-              }
-              $('#chaosProgramFlow').html(flow_html);
-          }
-          else {
-              $('#chaosProgramFlow').html(this.responseText);  
-          }
-      }
-  };;
+                                    for (let [key, value] of globalState.get('chaos_jobs_status')) {
+                                            if (key.search(search_job) != -1 ) {
+                                                    if (globalState.get('current_color_mode') == "light") {
+                                                            flow_html = flow_html + '<div class="row"><div class="alert alert-light alert-kinv" id="' +  random_code + Math.floor(Math.random() * 9999) +'" role="alert" style="border-color: #000000; border-width: 1.5px;">[' + key.split(":")[2] + '] Status: ' + value + '</div></div>';
+                                                    } else {
+                                                            flow_html = flow_html + '<div class="row"><div class="alert alert-light alert-kinv" id="' +  random_code + Math.floor(Math.random() * 9999) +'" role="alert" style="border-color: #ffffff; color: #1ed931; background-color: #0a0a0a; border-width: 1.5px;">[' + key.split(":")[2] + '] Status: ' + value + '</div></div>';
+                                                    }
+                                            }
+                                    }
+                                    i++;
+                            }
+                            $('#chaosProgramFlow').html(flow_html);
+                    }
+                    else {
+                            $('#chaosProgramFlow').html(this.responseText);  
+                    }
+            }
+    };
 
-  oReq.setRequestHeader("Content-Type", "application/json");
-  oReq.send(chaosProgram);
+    oReq.setRequestHeader("Content-Type", "application/json");
+    oReq.send(chaosProgram);
 }
 
 function getSavedPresets() {
-  var oReq = new XMLHttpRequest();
-  oReq.onreadystatechange = function () {
-      if (this.readyState === XMLHttpRequest.DONE && this.status === 200) {
-          if ((this.responseText.trim() != "nil") && (this.responseText.trim() != "")) {
-              // console.log("[GET-PRESETS] Response from backend: <" + this.responseText.trim() + ">");
-              var savedPresets = this.responseText.split(",");
-              for (i = 0; i < savedPresets.length; i++) {
-                  var currentPresetName = savedPresets[i].split("_")[1];
-                  currentPresetName = currentPresetName.charAt(0).toUpperCase() + currentPresetName.slice(1);
-                  //console.log("[GET-PRESETS] computing preset: " + currentPresetName);
-                  var buttonId = "load" + currentPresetName.trim();
-                  // console.log("[GET-PRESETS] Change border color of buttonId: " + buttonId);
-                  // console.log(document.getElementById(buttonId));
-                  if (document.getElementById(buttonId) == null){
-                      // console.log("[GET-PRESETS] Appending button to loadButtonGroup. id: " + buttonId + " presetname: " + currentPresetName.trim());
-                      latest_preset_lang = "k-inv";
-                      createChaosProgramButton(currentPresetName.trim(), latest_preset_lang);                      
-                  } else {
-                      // document.getElementById(buttonId).classList.remove('btn-light');
-                      // document.getElementById(buttonId).classList.add('btn-light-saved');
-                  }
-              }
-          } 
-        //   else {
-        //       console.log("[GET-PRESETS] There is no saved presets in Redis");
-        //   }
-      }
-  };;
-  oReq.open("GET", k8s_url + "/chaos/loadpreset/savedpresets");
-  oReq.send();
+    var oReq = new XMLHttpRequest();
+    oReq.onreadystatechange = function () {
+            if (this.readyState === XMLHttpRequest.DONE && this.status === 200) {
+                    if ((this.responseText.trim() != "nil") && (this.responseText.trim() != "")) {
+                            var savedPresets = this.responseText.split(",");
+                            for (i = 0; i < savedPresets.length; i++) {
+                                    var currentPresetName = savedPresets[i].split("_")[1];
+                                    currentPresetName = currentPresetName.charAt(0).toUpperCase() + currentPresetName.slice(1);
+                                    var buttonId = "load" + currentPresetName.trim();
+                                    if (document.getElementById(buttonId) == null){
+                                            globalState.set('latest_preset_lang', "k-inv");
+                                            createChaosProgramButton(currentPresetName.trim(), globalState.get('latest_preset_lang'));                      
+                                    }
+                            }
+                    }
+            }
+    };
+    oReq.open("GET", k8s_url + "/chaos/loadpreset/savedpresets");
+    oReq.send();
 }
 
 function loadSavedPreset(tool, lang, defaultpreset) {
-  var oReq = new XMLHttpRequest();
-  oReq.onreadystatechange = function () {
-      if (this.readyState === XMLHttpRequest.DONE && this.status === 200) {
-          if (this.responseText.trim() != "nil") {
-              $("#currentLoadTest").val(this.responseText.trim());
-          } else {
-              $("#currentLoadTest").val(defaultpreset);
-          }
-      }
-  };;
-  oReq.open("GET", k8s_url + "/chaos/loadpreset?name=" + tool + "&lang=" + lang);
-  oReq.send()
-  var now = new Date().toLocaleString().replace(',','')
-  $('#alert_placeholder_programming_mode').replaceWith(alert_div + '[' + now + '] Open preset for ' + tool + '</div>');
-  //$('#alert_placeholder').replaceWith(alert_div + '[' + now + '] Open preset for ' + tool + '</div>');
+    var oReq = new XMLHttpRequest();
+    oReq.onreadystatechange = function () {
+            if (this.readyState === XMLHttpRequest.DONE && this.status === 200) {
+                    if (this.responseText.trim() != "nil") {
+                            $("#currentLoadTest").val(this.responseText.trim());
+                    } else {
+                            $("#currentLoadTest").val(defaultpreset);
+                    }
+            }
+    };
+    oReq.open("GET", k8s_url + "/chaos/loadpreset?name=" + tool + "&lang=" + lang);
+    oReq.send();
+    var now = new Date().toLocaleString().replace(',', '');
+    $('#alert_placeholder_programming_mode').replaceWith(alert_div + '[' + now + '] Open preset for ' + tool + '</div>');
+    globalState.set('latest_preset_name', tool);
+    globalState.set('latest_preset_lang', lang);
 }
 
 function resetPreset(kind) {
-  var oReq = new XMLHttpRequest();
-  oReq.onreadystatechange = function () {
-      if (this.readyState === XMLHttpRequest.DONE && this.status === 200) {
-          let capitalizedPreset = latest_preset_name.charAt(0).toUpperCase() + latest_preset_name.slice(1);
-          let buttonId = "load" + capitalizedPreset;
-          // document.getElementById(buttonId).classList.remove('btn-light-saved');
-          // document.getElementById(buttonId).classList.add('btn-light');
-          closeSetLoadTestModal();
-          getSavedPresets();
-          if (kind == 'k-inv') {
-              console.log("[DELETE-K-INV-PROGRAM] " + latest_preset_name + " deleted");
-              deleteChaosProgramButton(latest_preset_name);
-          }
-          else {
-              console.log("[RESET-PRESETS] " + latest_preset_name + " restored with default preset");
-          }
-          var now = new Date().toLocaleString().replace(',','')
-          $('#alert_placeholder_programming_mode').replaceWith(alert_div + '[' + now + '] ' + latest_preset_name + ' preset has been restored with default code</div>');
-          //$('#alert_placeholder').replaceWith(alert_div + '[' + now + '] ' + latest_preset_name + ' preset has been restored with default code</div>');
-      }
-  };;
-  if (kind == 'k-inv') {
-      console.log("[RESET-PRESETS] Deleting " + latest_preset_name + " lang " + latest_preset_lang);
-  }
-  oReq.open("POST", k8s_url + "/chaos/loadpreset/reset?name="+ latest_preset_name.toLowerCase() + "&lang="+ latest_preset_lang);
-  oReq.send({});
+    var oReq = new XMLHttpRequest();
+    oReq.onreadystatechange = function () {
+            if (this.readyState === XMLHttpRequest.DONE && this.status === 200) {
+                    let capitalizedPreset = globalState.get('latest_preset_name').charAt(0).toUpperCase() + globalState.get('latest_preset_name').slice(1);
+                    let buttonId = "load" + capitalizedPreset;
+                    // document.getElementById(buttonId).classList.remove('btn-light-saved');
+                    // document.getElementById(buttonId).classList.add('btn-light');
+                    closeSetLoadTestModal();
+                    getSavedPresets();
+                    if (kind == 'k-inv') {
+                            console.log("[DELETE-K-INV-PROGRAM] " + globalState.get('latest_preset_name') + " deleted");
+                            deleteChaosProgramButton(globalState.get('latest_preset_name'));
+                    }
+                    else {
+                            console.log("[RESET-PRESETS] " + globalState.get('latest_preset_name') + " restored with default preset");
+                    }
+                    var now = new Date().toLocaleString().replace(',','')
+                    $('#alert_placeholder_programming_mode').replaceWith(alert_div + '[' + now + '] ' + globalState.get('latest_preset_name') + ' preset has been restored with default code</div>');
+                    //$('#alert_placeholder').replaceWith(alert_div + '[' + now + '] ' + globalState.get('latest_preset_name') + ' preset has been restored with default code</div>');
+            }
+    };;
+    if (kind == 'k-inv') {
+            console.log("[RESET-PRESETS] Deleting " + globalState.get('latest_preset_name') + " lang " + globalState.get('latest_preset_lang'));
+    }
+    oReq.open("POST", k8s_url + "/chaos/loadpreset/reset?name="+ globalState.get('latest_preset_name').toLowerCase() + "&lang="+ globalState.get('latest_preset_lang'));
+    oReq.send({});
 }
