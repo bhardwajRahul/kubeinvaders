@@ -606,22 +606,22 @@ window.setInterval(function draw() {
     }
     drawSpaceship();
 
-    if (shot && !collisionDetected) {
+    if (globalState.get('shot') && !globalState.get('collisionDetected')) {
         drawRocket();
     }
 
-    if (x + dx > canvas.width - ballRadius || x + dx < ballRadius) {
-        dx = -dx;
+    if (globalState.get('x') + globalState.get('dx') > canvas.width - ballRadius || globalState.get('x') + globalState.get('dx') < ballRadius) {
+        globalState.set('dx') = -globalState.get('dx');
     }
-    if (y + dy > canvas.height - ballRadius || y + dy < ballRadius) {
-        dy = -dy;
+    if (globalState.get('y') + globalState.get('dy') > canvas.height - ballRadius || globalState.get('y') + globalState.get('dy') < ballRadius) {
+        globalState.set('dy') = -globalState.get('dy');
     }
 
     if (globalState.get('autoPilot')) {
-        spaceshipY = 340;
+        globalState.set('spaceshipY') = 340;
 
-        if (getRandomInt(100) < randomFactor) {
-            shot = true;
+        if (getRandomInt(100) < globalState.get('randomFactor')) {
+            globalState.set('shot') = true;
         }
 
         if (globalState.get('autoPilotDirection') == 0) {
