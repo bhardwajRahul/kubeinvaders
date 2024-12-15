@@ -419,39 +419,39 @@ function keyDownHandler(e) {
     if (!globalState.get('modal_opened') && globalState.get('game_mode_switch')) {
         e.preventDefault();
         if (e.key == "Right" || e.key == "ArrowRight") {
-            rightPressed = true;
+            globalState.set('rightPressed') = true;
         }
         else if (e.key == "Left" || e.key == "ArrowLeft") {
-            leftPressed = true;
+            globalState.set('leftPressed') = true;
         }
         if (e.key == "Up" || e.key == "ArrowUp") {
-            upPressed = true;
+            globalState.set('upPressed') = true;
         }
         else if (e.key == "Down" || e.key == "ArrowDown") {
-            downPressed = true;
+            globalState.set('downPressed') = true;
         }
         else if (e.keyCode == 83) {
-            if (shuffle) {
-                shuffle = false;
+            if (globalState.get('shuffle')) {
+                globalState.set('shuffle') = false;
                 $('#alert_placeholder').replaceWith(alert_div + 'Latest action: Disable shuffle</div>');
             }
             else {
-                shuffle = true;
+                globalState.set('shuffle') = true;
                 $('#alert_placeholder').replaceWith(alert_div + 'Latest action: Enable shuffle</div>');
             }
         }
         else if (e.keyCode == 32) {
-            shot = true;
+            globalState.set('shot') = true;
         }
         else if (e.keyCode == 78) {
             switchNamespace();
         }
         else if (e.keyCode == 72) {
-            if (help) {
-                help = false;
+            if (globalState.get('help')) {
+                globalState.set('help') = false;
             }
             else {
-                help = true;
+                globalState.set('help') = true;
             }
         }
         else if (e.keyCode == 67) {
@@ -650,7 +650,7 @@ window.setInterval(function draw() {
         }
     }
 
-    if (rightPressed) {
+    if (globalState.get('rightPressed')) {
         globalState.set('spaceshipX', globalState.get('spaceshipX') + 3);
         if (globalState.get('spaceshipX') + spaceshipWidth > canvas.width) {
             globalState.set('spaceshipX', canvas.width - spaceshipWidth);
