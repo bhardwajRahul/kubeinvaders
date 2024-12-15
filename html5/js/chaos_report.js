@@ -62,16 +62,19 @@ function getIngressLists() {
   var oReq = new XMLHttpRequest();
   oReq.onreadystatechange = function () {
     if (this.readyState === XMLHttpRequest.DONE && this.status === 200) {
+      console.log("[SAVE-CHAOS-REPORT-INGRESS-LISTS]" + JSON.parse(this.responseText));
       parseIngressListJSON(JSON.parse(this.responseText));
     }
-  };
-  oReq.open("GET", globalState.get('k8s_url') + "/kube/ingress/get?namespace=" + globalState.get("namespace"), true);
+  };;
+  oReq.open("GET", k8s_url + "/kube/ingress/get?namespace=" + namespace, true);
   oReq.setRequestHeader("Content-Type", "application/json");
   oReq.send();
 }
 
 function diffBetweenTwoDates(date1, date2) {
+  // console.log("[SAVE-CHAOS-REPORT-CONF] Diff between two dates: " + date1 + " and " + date2);
   var diff = (date2.getTime() - date1.getTime()) / 1000;
+  // console.log("[SAVE-CHAOS-REPORT-CONF] Diff between two dates: " + diff + " seconds")
   return diff;
 }
 
@@ -92,43 +95,39 @@ function addPostUploadFile(selectedValue) {
 
 function chaosReportHttpEndpointAdd() {
   $("#addSiteAreaChaosReport").html(`
-<div class="row">
-    <div class="col col-xl-10" style="margin-top: 2%;">
-        <label for="ingressHostList">Ingress Host List</label>
-        <select id="ingressHostList" class="form-select" aria-label="Ingress Host List" onclick="setModalState(true)">
-        </select>
+  <div class="row">
+    <div class="col col-xl-10" sytle="margin-top: 2%;">
+      <label for="chaosReportCheckSiteURL">Ingress Host List</label>
+      <select id="ingressHostList" class="form-select" aria-label="Ingress Host List" onchange="setChaosReportURL(this)">
+      </select>
     </div>
-</div>
-
-<div class="row" style="margin-top: 2%;">
+  </div>
+  <div class="row" style="margin-top: 2%;">
     <div class="col col-xl-10">
-        <label for="chaosReportCheckSiteURL">URL</label>
-        <input type="text" class="form-control input-lg" id="chaosReportCheckSiteURL" value="" style="margin-top: 1%; width: 80%;">
+      <label for="chaosReportCheckSiteURL">URL</label>
+      <input type='text' class='input-lg' id='chaosReportCheckSiteURL' value='' style='margin-top: 1%; width: 80%'>
     </div>
-</div>
-
-<div class="row" style="margin-top: 2%;">
+  </div>
+  <div class="row">
     <div class="col col-xl-10">
-        <label for="chaosReportCheckSiteURLMethod" style="margin-top: 1%;">Method</label>
-        <select id="chaosReportCheckSiteURLMethod" class="form-select input-sm" aria-label="Method" onchange="addPostUploadFile(this.value)">
-            <option value="GET">GET</option>
-            <option value="POST">POST</option>
-        </select>
+      <label for="chaosReportCheckSiteURLMethod" style='margin-top: 1%;'>method</label>
+      <select id="chaosReportCheckSiteURLMethod" class="input-sm" aria-label="method" onChange="addPostUploadFile(this.options[this.selectedIndex].value)">
+        <option value="GET">GET</option>
+        <option value="POST">POST</option>
+      </select>
     </div>
-</div>
-
-<div class="row" style="margin-top: 2%;">
+  </div>
+  <div class="row">
     <div class="col col-xl-10">
-        <div id="chaosReportUploadFileDiv"></div>
+      <div id="chaosReportUploadFileDiv"></div>
     </div>
-</div>
-
-<div class="row" style="margin-top: 2%;">
+  </div>
+  <div class="row">
     <div class="col col-xl-10">  
-        <label for="chaosReportCheckSiteURLHeaders">Headers</label>
-        <input type="text" class="form-control input-sm" id="chaosReportCheckSiteURLHeaders" value='{"Content-Type": "application/json; charset=utf-8"}' style="margin-top: 1%; margin-bottom: 1%; width: 80%;" onclick="setModalState(true)">
+      <label for="chaosReportCheckSiteURLHeaders">HEADERS</label>
+      <input type='text' class='input-sm' id='chaosReportCheckSiteURLHeaders' value='{"Content-Type": "application/json; charset=utf-8"}' style='margin-top: 1%; margin-bottom: 1%; width: 80%;'><br>
     </div>
-</div>
+  </div>
   `);
 
   if (is_demo_mode()) {
@@ -186,12 +185,13 @@ function sendSavedChaosReport() {
     alert("Invalid URL");
     return;
   }
-  if (globalState.get("chaos_report_start_date") == "") {
-    globalState.set("chaos_report_start_date", new Date());
+
+  if (chaos_report_start_date == "") {
+    chaos_report_start_date = new Date();
   }
 
   //startGameMode()
-  globalState.set("chaos_report_switch", true);
+  chaos_report_switch = true;
   document.getElementById("httpStatsCanvasDiv").style.display = "block";
   document.getElementById("chartDiv").style.display = "block";
 
@@ -264,20 +264,22 @@ function saveChaosReport() {
 
 function updateElapsedTimeArray(projectName) {
   $("#chaosReportSessionTimeDiv").html(diffBetweenTwoDates(chaos_report_start_date, new Date()) + " seconds");
+  // console.log("[SAVE-CHAOS-REPORT-CONF] Diff Between Dates: " + toString(diffBetweenTwoDates(chaos_report_start_date, new Date())));
+  // console.log("[SAVE-CHAOS-REPORT-CONF] Updating elapsed time array for project: " + projectName);
 
   var oReq = new XMLHttpRequest();
   var redis_key = projectName + "_check_url_elapsed_time";
+  // console.log("[SAVE-CHAOS-REPORT-CONF] Redis key: " + redis_key);
 
   oReq.onreadystatechange = function () {
     if (this.readyState === XMLHttpRequest.DONE && this.status === 200) {
-      var elapsedTimeArray = globalState.get("chaos_report_http_elapsed_time_array");
-      elapsedTimeArray.push(parseFloat(this.responseText));
-      while (elapsedTimeArray.length > 40) {
-        elapsedTimeArray.shift();
+      // console.log("[SAVE-CHAOS-REPORT-CONF] Elapsed time array received from Redis: " + parseFloat(this.responseText));
+      chaos_report_http_elapsed_time_array.push(parseFloat(this.responseText));
+      while (chaos_report_http_elapsed_time_array.length > 40) {
+        chaos_report_http_elapsed_time_array.shift();
       }
-      globalState.set("chaos_report_http_elapsed_time_array", elapsedTimeArray);
     }
-  };
+  };;
 
   oReq.open("GET", k8s_url + "/chaos/redis/get?key=" + redis_key, true);
   oReq.setRequestHeader("Content-Type", "application/json");
@@ -297,9 +299,7 @@ function updateStatusCodePieChart(projectName) {
       var status_code = this.responseText.trim();
       // console.log("[SAVE-CHAOS-REPORT-CONF] Status Code Pie Chart received from Redis: |" + status_code + "|");
 
-      var chart_status_code_dict = globalState.get("chart_status_code_dict");
-      chart_status_code_dict[status_code] = chart_status_code_dict[status_code] + 1;
-      globalState.set("chart_status_code_dict", chart_status_code_dict);
+      chart_status_code_dict[status_code] = chart_status_code_dict[status_code] + 1
 
       myHTTPStatusCodeChart.setOption({
         series: [
@@ -352,11 +352,6 @@ function updateStatusCodePieChart(projectName) {
                 itemStyle: { color: 'yellow' },
               },
               {
-                value: chart_status_code_dict["405"],
-                name: '405',
-                itemStyle: { color: 'yellow' },
-              },
-              {
                 value: chart_status_code_dict["Connection Error"],
                 name: 'Connection Error',
                 itemStyle: { color: 'black' },
@@ -372,7 +367,7 @@ function updateStatusCodePieChart(projectName) {
         ]
       });
     }
-  };
+  };;
 
   oReq.open("GET", k8s_url + "/chaos/redis/get?key=" + redis_key, true);
   oReq.setRequestHeader("Content-Type", "application/json");
@@ -399,10 +394,10 @@ function updateChaosReportStartTime(projectName) {
 
 function updateMainMetricsChart() {
   // console.log("[SAVE-CHAOS-REPORT-CONF] Updating chart");
-  // console.log("[SAVE-CHAOS-REPORT-CONF] chart_current_chaos_job_pod: " + globalState.get("chart_current_chaos_job_pod"));
-  // console.log("[SAVE-CHAOS-REPORT-CONF] chart_pods_not_running_on: " + globalState.get("chart_pods_not_running_on"));
-  // console.log("[SAVE-CHAOS-REPORT-CONF] chart_fewer_replicas_seconds: " + globalState.get("chart_fewer_replicas_seconds"));
-  // console.log("[SAVE-CHAOS-REPORT-CONF] chart_latest_fewer_replicas_seconds: " + globalState.get("chart_latest_fewer_replicas_seconds"));
+  // console.log("[SAVE-CHAOS-REPORT-CONF] chart_current_chaos_job_pod: " + chart_current_chaos_job_pod);
+  // console.log("[SAVE-CHAOS-REPORT-CONF] chart_pods_not_running_on: " + chart_pods_not_running_on);
+  // console.log("[SAVE-CHAOS-REPORT-CONF] chart_fewer_replicas_seconds: " + chart_fewer_replicas_seconds);
+  // console.log("[SAVE-CHAOS-REPORT-CONF] chart_latest_fewer_replicas_seconds: " + chart_latest_fewer_replicas_seconds);
 
   myMainChaosMetrics.setOption({
     series: [
@@ -410,19 +405,19 @@ function updateMainMetricsChart() {
         type: 'pie',
         data: [
           {
-            value: Number(globalState.get("chart_current_chaos_job_pod")),
+            value: Number(chart_current_chaos_job_pod),
             name: 'Current Chaos Pods'
           },
           {
-            value: Number(globalState.get("chart_pods_not_running_on")),
+            value: Number(chart_pods_not_running_on),
             name: 'Not Running Pods'
           },
           {
-            value: Number(globalState.get("chart_fewer_replicas_seconds")),
+            value: Number(chart_fewer_replicas_seconds),
             name: 'Current Replicas State Delay'
           },
           {
-            value: Number(globalState.get("chart_latest_fewer_replicas_seconds")),
+            value: Number(chart_latest_fewer_replicas_seconds),
             name: 'Latest Replicas State Delay'
           }
         ],
@@ -438,11 +433,11 @@ function drawCanvasHTTPStatusCodeStats() {
   myHTTPElapsedChart.setOption({
     xAxis: {},
     yAxis: {
-      data: globalState.get("chaos_report_http_elapsed_time_array"),
+      data: chaos_report_http_elapsed_time_array,
     },
     series: [
       {
-        data: globalState.get("chaos_report_http_elapsed_time_array"),
+        data: chaos_report_http_elapsed_time_array,
         type: 'line',
         smooth: true
       }
@@ -461,16 +456,16 @@ option = {
     top: 'center'
   },
   xAxis: {
-    data: globalState.get("chaos_report_http_elapsed_time_array"),
+    data: chaos_report_http_elapsed_time_array,
   },
   yAxis: {},
   series: [
     {
-      data: globalState.get("chaos_report_http_elapsed_time_array"),
+      data: chaos_report_http_elapsed_time_array,
       type: 'line',
       smooth: true,
       itemStyle: {
-        color: 'white'
+        color: 'green'
       }
     }
   ]
@@ -523,57 +518,57 @@ option = {
       },
       data: [
         {
-          value: globalState.get("chart_status_code_dict")["200"],
+          value: chart_status_code_dict["200"],
           name: '200',
           itemStyle: { color: 'green' },
         },
         {
-          value: globalState.get("chart_status_code_dict")["500"],
+          value: chart_status_code_dict["500"],
           name: '500',
           itemStyle: { color: 'red' },
         },
         {
-          value: globalState.get("chart_status_code_dict")["502"],
+          value: chart_status_code_dict["502"],
           name: '502',
           itemStyle: { color: 'red' },
         },
         {
-          value: globalState.get("chart_status_code_dict")["503"],
+          value: chart_status_code_dict["503"],
           name: '503',
           itemStyle: { color: 'red' },
         },
         {
-          value: globalState.get("chart_status_code_dict")["504"],
+          value: chart_status_code_dict["504"],
           name: '504',
           itemStyle: { color: 'red' },
         },
         {
-          value: globalState.get("chart_status_code_dict")["400"],
+          value: chart_status_code_dict["400"],
           name: '400',
           itemStyle: { color: 'yellow' },
         },
         {
-          value: globalState.get("chart_status_code_dict")["401"],
+          value: chart_status_code_dict["401"],
           name: '401',
           itemStyle: { color: 'yellow' },
         },
         {
-          value: globalState.get("chart_status_code_dict")["403"],
+          value: chart_status_code_dict["403"],
           name: '403',
           itemStyle: { color: 'yellow' },
         },
         {
-          value: globalState.get("chart_status_code_dict")["404"],
+          value: chart_status_code_dict["404"],
           name: '404',
           itemStyle: { color: 'yellow' },
         },
         {
-          value: globalState.get("chart_status_code_dict")["Connection Error"],
+          value: chart_status_code_dict["Connection Error"],
           name: 'Connection Error',
           itemStyle: { color: 'black' },
         },
         {
-          value: globalState.get("chart_status_code_dict")["Other"],
+          value: chart_status_code_dict["Other"],
           name: 'Other',
           itemStyle: { color: 'grey' },
         },

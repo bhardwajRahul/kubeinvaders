@@ -19,65 +19,53 @@ and various game functionalities such as chaos engineering actions, metrics retr
 and user interactions.
 */
 
+/* Functions for controlling game modes */
+
 function startGameMode() {
-  let game_buttons = document.getElementById("game-buttons");
-  let game_screen = document.getElementById("game-screen");
-  if (globalState.get('game_mode_switch')) {
-    globalState.set('game_mode_switch', false);
+  if (game_mode_switch) {
+    game_mode_switch = false;
     $("#gameModeButton").text("Enable Game Mode");
   } else {
-    /* TO DO: DO BETTER :D */
-    let checkbox = {
-      checked: true,
-    };
-    let close_button = document.getElementById("closeButtonReport");
-    close_button.innerHTML = "Skip";
-    showPrepareChaosReportModal(checkbox);
-    globalState.set('game_mode_switch', true);
+    game_mode_switch = true;
     document.getElementById("gameContainer").style.width = "100%";
     document.getElementById("gameContainer").style.height = "100%";
     //document.getElementById("loadButtonGroup").style.width = "650px";
     $("#gameModeButton").text("Disable Game Mode");
-    $("#programmingModeButton").text("Enable Prog. Mode");
-    globalState.set('programming_mode_switch', false);
+    $("#programmingModeButton").text("Enable Prog. Mode (alpha)");
+    programming_mode_switch = false;
   }
-  if (globalState.get('game_buttons_display') === "none") {
-    globalState.set('game_buttons_display', "block");
+  if (game_buttons.style.display === "none") {
     game_buttons.style.display = "block";
-    } else {
-    globalState.set('game_buttons_display', "none");
+  } else {
     game_buttons.style.display = "none";
   }
-  if (globalState.get('game_screen_display') === "none") {
-    globalState.set('game_screen_display', "block");
+  if (game_screen.style.display === "none") {
     game_screen.style.display = "block";
   } else {
-    globalState.set('game_screen_display', "none");
     game_screen.style.display = "none";
   }
-  globalState.set('chaos_program_screen_display', "none");
-  globalState.set('programming_mode_buttons_display', "none");
+  chaos_program_screen.style.display = "none";
+  programming_mode_buttons.style.display = "none";
   resizeCharts();
 }
 
 function startProgrammingMode() {
-  let game_screen = document.getElementById("game-screen");
-  kubePingModalSwitch();
+
   if (is_demo_mode()) {
     demo_mode_alert();
     return;
   }
 
-  if (globalState.get('programming_mode_switch')) {
-    globalState.set('programming_mode_switch', false);
-    $("#programmingModeButton").text("Enable Prog. Mode");
+  if (programming_mode_switch) {
+    programming_mode_switch = false;
+    $("#programmingModeButton").text("Enable Prog. Mode (alpha)");
   } else {
     document.getElementById("gameContainer").style.width = "100%";
     document.getElementById("gameContainer").style.height = "100%";
     document.getElementById("loadButtonGroup").style.width = "1250px";
 
-    globalState.set('programming_mode_switch', true);
-    globalState.set('game_mode_switch', false);
+    programming_mode_switch = true;
+    game_mode_switch = false;
     $("#gameModeButton").text("Enable Game Mode");
     $("#programmingModeButton").text("Disable Prog. Mode");
   }
@@ -93,13 +81,4 @@ function startProgrammingMode() {
   }
   game_buttons.style.display = "none";
   game_screen.style.display = "none";
-
-  if (editor == null) {
-    editor = CodeMirror.fromTextArea(chaosProgramTextArea, {
-      lineNumbers: true, 
-      theme: "dracula",
-      mode: "javascript"
-    });
-    editor.setSize("100%", "100%");
-  }
 }

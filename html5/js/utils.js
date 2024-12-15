@@ -1,28 +1,3 @@
-/*
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
-
-/*
-This file contains the main JavaScript code for the KubeInvaders game.
-It handles the initialization of the game, interaction with the Kubernetes cluster,
-and various game functionalities such as chaos engineering actions, metrics retrieval,
-and user interactions.
-*/
-
-const demo_mode = globalState.get('demo_mode');
-const k8s_url = globalState.get('k8s_url');
-let kubeping_sent = globalState.get('kubeping_sent');
-
 document.addEventListener("DOMContentLoaded", function() {
   setTimeout(function() {
       document.getElementById("splash-screen").style.display = "none";
@@ -58,7 +33,7 @@ function rand_id() {
 
 function formattedToday() {
   const today = new Date();
-  return today;
+  return today
 }
 
 function convertStringToArrayWithSeparator(str, separator) {
@@ -66,49 +41,13 @@ function convertStringToArrayWithSeparator(str, separator) {
 }
 
 function demo_mode_alert() {
-  alert("This is a demo mode installed into the k8s cluster of platformengineering.it, some features are disabled.");
+  alert("This is a demo mode, some features are disabled");
 }
 
 function is_demo_mode() {
-  return demo_mode;
-}
-
-function sanitizeStringToURLFriendly(str) {
-  return str.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase();
-}
-
-function kubePingModalSwitch() {
-  var oReq = new XMLHttpRequest();
-  oReq.onreadystatechange = function () {
-      if (this.readyState === XMLHttpRequest.DONE && this.status === 200) {
-        console.log("[K-INV STARTUP] kubeping status is: |" + this.responseText.trim() + "|");
-        if (this.responseText.trim() == "Key not found" || is_demo_mode()) {
-          setModalState(true);
-          showKubePingModal();
-        }
-      }
-  };
-
-  oReq.open("GET", k8s_url + "/chaos/redis/get?key=kubeping", true);
-  oReq.send();
-}
-
-function setKubePingStatusPing(value) {
-  var oReq = new XMLHttpRequest();
-
-  if (value == 1) {
-    oReq.open("POST", k8s_url + "/chaos/redis/set?key=kubeping&msg=" + sanitizeStringToURLFriendly(document.getElementById("kubePingJsonTextArea").value), true);  
-  } 
-  else {
-    oReq.open("POST", k8s_url + "/chaos/redis/set?key=kubeping", true);  
+  if (demo_mode == "true") {
+    return true;
   }
-
-  oReq.onreadystatechange = function () {
-      if (this.readyState === XMLHttpRequest.DONE && this.status === 200) {
-        globalState.set('kubeping_sent', true);
-      }
-  };
-  oReq.setRequestHeader("Content-Type", "application/text");
-  oReq.send(String(value));
-  closeKubePingModal();
+  return false;
 }
+

@@ -26,6 +26,8 @@ function zoomIn() {
     document.getElementById("gameContainer").style.height = "100%";
     document.getElementById("myCanvas").width = 1200;
     document.getElementById("myCanvas").height = 800;
+    // document.getElementById("zoomInGameScreenInput").disabled = true;
+    // document.getElementById("zoomOutGameScreenInput").disabled = false;
     document.getElementById("loadButtonGroup").style.width = "1200px";
     maxAliensPerRow = 20;
     myMainChaosMetrics.resize();
@@ -39,6 +41,8 @@ function zoomOut() {
     document.getElementById("myCanvas").height = 480;
     document.getElementById("gameContainer").style.width = "50%"
     document.getElementById("gameContainer").style.height = "50%"
+    // document.getElementById("zoomInGameScreenInput").disabled = false;
+    // document.getElementById("zoomOutGameScreenInput").disabled = true;
     document.getElementById("loadButtonGroup").style.width = "900px";
     maxAliensPerRow = 12;
     myMainChaosMetrics.resize();
@@ -47,24 +51,24 @@ function zoomOut() {
 }
 
 function controlAutoPilot() {
-  if (globalState.get('autoPilot')) {
-    globalState.set('autoPilot', false);
+  if (autoPilot) {
+    autoPilot = false;
     $("#controlAutoPilotButton").text("Start");
-    globalState.set('chaos_report_switch', false);
+    chaos_report_switch = false;
   } else {
-    globalState.set('autoPilot', true);
+    autoPilot = true;
     $("#controlAutoPilotButton").text("Stop");
   }
 }
 
 function changeRandomFactor() {
-  globalState.set('randomFactor', $("#randomFactorInput").val());
-  $("#currentRandomFactor").text(globalState.get('randomFactor'));
+  randomFactor = $("#randomFactorInput").val();
+  $("#currentRandomFactor").text(randomFactor);
 }
 
 function showSpecialKeys() {
   $('#showSpecialKeysModal').modal('show');
-  globalState.set('modal_opened', true);
+  modal_opened = true;
 }
 
 function switchColorMode() {
@@ -73,9 +77,9 @@ function switchColorMode() {
   let textkinv = document.getElementsByClassName("text-kinv");
   let alertkinv = document.getElementsByClassName("alert-kinv");
 
-  if (globalState.get('current_color_mode') == "light") {
+  if (current_color_mode == "light") {
     bodyElement.style.backgroundColor = "#0a0a0a";
-    globalState.set('current_color_mode', "dark");
+    current_color_mode = "dark";
 
     for (var i = 0; i < buttonsLightElement.length; i++) {
       console.log("[COLOR-MODE-BUTTONS] Change color of " + buttonsLightElement[i].id);
@@ -104,9 +108,9 @@ function switchColorMode() {
     return;
   }
 
-  if (globalState.get('current_color_mode') == "dark") {
+  if (current_color_mode == "dark") {
     bodyElement.style.backgroundColor = "#ffffff";
-    globalState.set('current_color_mode', "light");
+    current_color_mode = "light";
 
     for (var i = 0; i < buttonsLightElement.length; i++) {
       console.log("[COLOR-MODE-BUTTONS] Change color of " + buttonsLightElement[i].id);
@@ -137,15 +141,15 @@ function switchColorMode() {
 }
 
 function switchNamespace() {
-  if (globalState.get('namespaces_index') < globalState.get('namespaces').length - 1) {
-    globalState.set('namespaces_index', globalState.get('namespaces_index') + 1);
+  if (namespaces_index < namespaces.length - 1) {
+    namespaces_index += 1;
   }
   else {
-    globalState.set('namespaces_index', 0);
+    namespaces_index = 0;
   }
-  globalState.set('namespace', globalState.get('namespaces')[globalState.get('namespaces_index')]);
-  $('#currentGameNamespace').text(globalState.get('namespace'));
-  $('#alert_placeholder').replaceWith(alert_div + 'Latest action: Change target namespace to ' + globalState.get('namespace') + '</div>');
+  namespace = namespaces[namespaces_index];
+  $('#currentGameNamespace').text(namespace);
+  $('#alert_placeholder').replaceWith(alert_div + 'Latest action: Change target namespace to ' + namespace + '</div>');
   aliens = [];
   pods = [];
 }
@@ -174,15 +178,15 @@ function deleteChaosProgramButton(name) {
 }
 
 function setLogConsole() {
-  if (globalState.get('log_tail_switch')) {
+  if (log_tail_switch) {
     $("#logConsoleButton").text("Start Logs Tail");
     $('#alert_placeholder3').replaceWith(alert_div_webtail + 'Stopping log tail...</div>');
-    globalState.set('log_tail_switch', false);
+    log_tail_switch = false;
     disableLogTail();
   } else {
     $('#alert_placeholder3').replaceWith(alert_div_webtail + 'Starting log tail...</div>');
     $("#logConsoleButton").text("Stop Logs Tail");
-    globalState.set('log_tail_switch', true);
+    log_tail_switch = true;
     log_tail_div.style.display = "block";
     log_tail_screen.style.display = "block"
     setLogRegex();
