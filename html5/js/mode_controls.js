@@ -20,6 +20,7 @@ and user interactions.
 */
 
 function startGameMode() {
+  let game_buttons = document.getElementById("game-buttons");
   if (globalState.get('game_mode_switch')) {
     globalState.set('game_mode_switch', false);
     $("#gameModeButton").text("Enable Game Mode");
@@ -42,7 +43,7 @@ function startGameMode() {
   if (globalState.get('game_buttons_display') === "none") {
     globalState.set('game_buttons_display', "block");
     game_buttons.style.display = "block";
-  } else {
+    } else {
     globalState.set('game_buttons_display', "none");
     game_buttons.style.display = "none";
   }
