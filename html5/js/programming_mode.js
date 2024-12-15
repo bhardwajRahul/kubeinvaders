@@ -129,7 +129,7 @@ function savePreset(action) {
   if (action == "save-chaos-program") {
       presetLang = "k-inv";
       presetName = codename + "-" + rand_id();
-      globalState.set('latest_preset_lang') = "k-inv";
+      globalState.set('latest_preset_lang', "k-inv");
       console.log("[SAVE-PRESET-CHAOSPROGRAM] lang: " + presetLang + " name:" + presetName);
       presetBody =  $('#chaosProgramTextArea').text();
       document.getElementById("resetToDefaultButton").style.display = "none";
@@ -138,7 +138,7 @@ function savePreset(action) {
   else if (latest_preset_lang == "k-inv") {
       presetLang = "k-inv";
       presetName = codename;
-      globalState.set('latest_preset_lang') = "k-inv";
+      globalState.set('latest_preset_lang', "k-inv");
       console.log("[SAVE-PRESET-CHAOSPROGRAM] lang: " + presetLang + " name:" + codename);
       presetBody = $('#currentLoadTest').val();
       document.getElementById("resetToDefaultButton").style.display = "none";

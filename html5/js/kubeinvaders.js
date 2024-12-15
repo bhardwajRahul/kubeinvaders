@@ -441,17 +441,17 @@ function keyDownHandler(e) {
             }
         }
         else if (e.keyCode == 32) {
-            globalState.set('shot') = true;
+            globalState.set('shot', true);
         }
         else if (e.keyCode == 78) {
             switchNamespace();
         }
         else if (e.keyCode == 72) {
             if (globalState.get('help')) {
-                globalState.set('help') = false;
+                globalState.set('help', false);
             }
             else {
-                globalState.set('help') = true;
+                globalState.set('help', true);
             }
         }
         else if (e.keyCode == 67) {
@@ -484,16 +484,16 @@ function keyDownHandler(e) {
 
 function keyUpHandler(e) {
     if (e.key == "Right" || e.key == "ArrowRight") {
-        rightPressed = false;
+        globalState.set('rightPressed', false);
     }
     else if (e.key == "Left" || e.key == "ArrowLeft") {
-        leftPressed = false;
+        globalState.set('leftPressed', false);
     }
     else if (e.key == "Up" || e.key == "ArrowUp") {
-        upPressed = false;
+        globalState.set('upPressed', false);
     }
     else if (e.key == "Down" || e.key == "ArrowDown") {
-        downPressed = false;
+        globalState.set('downPressed', false);
     }
 }
 
@@ -561,16 +561,16 @@ function drawRocket() {
     ctx.closePath();
 
     if (checkRocketAlienCollision()) {
-        globalState.set('rocketY') = -100;
-        globalState.set('rocketX') = -100;
-        globalState.set('collisionDetected') = false;
+        globalState.set('rocketY', -100);
+        globalState.set('rocketX', -100);
+        globalState.set('collisionDetected', false);
         return
     }
 
     if (globalState.get('shot') && globalState.get('rocketLaunched')) {
         if (globalState.get('rocketY') < 0) {
-            globalState.set('shot') = false;
-            globalState.set('rocketLaunched') = false;
+            globalState.set('shot', false);
+            globalState.set('rocketLaunched', false);
         }
         else {
             globalState.set('rocketY', globalState.get('rocketY') - globalState.get('rocketSpeed'));
@@ -611,17 +611,17 @@ window.setInterval(function draw() {
     }
 
     if (globalState.get('x') + globalState.get('dx') > canvas.width - globalState.get('ballRadius') || globalState.get('x') + globalState.get('dx') <  globalState.get('ballRadius')) {
-        globalState.set('dx') = -globalState.get('dx');
+        globalState.set('dx', -globalState.get('dx'));
     }
     if (globalState.get('y') + globalState.get('dy') > canvas.height - globalState.get('ballRadius') || globalState.get('y') + globalState.get('dy') <  globalState.get('ballRadius')) {
-        globalState.set('dy') = -globalState.get('dy');
+        globalState.set('dy', -globalState.get('dy'));
     }
 
     if (globalState.get('autoPilot')) {
-        globalState.set('spaceshipY') = 340;
+        globalState.set('spaceshipY', 340);
 
         if (getRandomInt(100) < globalState.get('randomFactor')) {
-            globalState.set('shot') = true;
+            globalState.set('shot', true);
         }
 
         if (globalState.get('autoPilotDirection') == 0) {
@@ -642,10 +642,10 @@ window.setInterval(function draw() {
         }
         else {
             if (autoPilotDirection > globalState.get('spaceshipX')) {
-                globalState.set('spaceshipX') += 5;
+                globalState.set('spaceshipX', globalState.get('spaceshipX') + 5);
             }
             else {
-                globalState.set('spaceshipX') -= 5;
+                globalState.set('spaceshipX', globalState.get('spaceshipX') - 5);
             }
         }
     }
