@@ -149,7 +149,7 @@ hr {
 
 @font-face {
   font-family: pixel;
-  src: url("./fonts/pixel.otf");
+  src: url(".././fonts/pixel.otf");
   font-size-adjust: inherit;
 }
 

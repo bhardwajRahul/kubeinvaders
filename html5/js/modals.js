@@ -94,7 +94,7 @@ function showPrepareChaosReportModal(checkbox) {
       setModalState(true);
     });
     $('#prepareChaosReportModal').modal('show');
-    $("#chaosReportHeader").text("Select Ingress - Namespace:" + namespace);
+    $("#chaosReportHeader").text("Select Ingress - Namespace:" + globalState.get('namespace'));
     setCodeNameToTextInput("chaosReportAuthor");
     setCodeNameToTextInput("chaosReportProject");
     setModalState(true);
