@@ -422,17 +422,17 @@ function keyDownHandler(e) {
             globalState.set('rightPressed') = true;
         }
         else if (e.key == "Left" || e.key == "ArrowLeft") {
-            globalState.set('leftPressed') = true;
+            globalState.set('leftPressed', true);
         }
         if (e.key == "Up" || e.key == "ArrowUp") {
-            globalState.set('upPressed') = true;
+            globalState.set('upPressed', true);
         }
         else if (e.key == "Down" || e.key == "ArrowDown") {
-            globalState.set('downPressed') = true;
+            globalState.set('downPressed', true);
         }
         else if (e.keyCode == 83) {
             if (globalState.get('shuffle')) {
-                globalState.set('shuffle') = false;
+                globalState.set('shuffle', false);
                 $('#alert_placeholder').replaceWith(alert_div + 'Latest action: Disable shuffle</div>');
             }
             else {
@@ -656,7 +656,7 @@ window.setInterval(function draw() {
             globalState.set('spaceshipX', canvas.width - spaceshipWidth);
         }
     }
-    else if (leftPressed) {
+    else if (globalState.get('leftPressed')) {
         globalState.set('spaceshipX', globalState.get('spaceshipX') - 3);
         if (globalState.get('spaceshipX') < 0) {
             globalState.set('spaceshipX', 0);
