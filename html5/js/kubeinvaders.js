@@ -679,12 +679,12 @@ window.setInterval(function draw() {
     ctx.fillStyle = 'white';
     ctx.font = '16px pixel';
 
-    ctx.fillText('Cluster: ' + globalState.get('endpoint'), 10, startYforHelp);
-    ctx.fillText('Current Namespace: ' + globalState.get('namespace'), 10, startYforHelp + 20);
-    ctx.fillText('Alien Shuffle: ' + globalState.get('shuffle'), 10, startYforHelp + 40);
-    ctx.fillText('Auto Namespaces Switch: ' + globalState.get('namespacesJumpStatus'), 10, startYforHelp + 60);
+    ctx.fillText('Cluster: ' + globalState.get('endpoint'), 10, globalState.get('startYforHelp'));
+    ctx.fillText('Current Namespace: ' + globalState.get('namespace'), 10, globalState.get('startYforHelp') + 20);
+    ctx.fillText('Alien Shuffle: ' + globalState.get('shuffle'), 10, globalState.get('startYforHelp') + 40);
+    ctx.fillText('Auto Namespaces Switch: ' + globalState.get('namespacesJumpStatus'), 10, globalState.get('startYforHelp') + 60);
 
-    ctx.fillText('press \'h\' for help!', 10, startYforHelp + 80);
+    ctx.fillText('press \'h\' for help!', 10, globalState.get('startYforHelp') + 80);
 
     if (globalState.get('help')) {
         ctx.fillText('h => Activate or deactivate help', 10, 280);
