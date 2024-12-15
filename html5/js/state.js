@@ -102,6 +102,7 @@ class GlobalState {
       namespacesJumpStatus: 'Disabled',
       latest_preset_name: "",
       latest_preset_lang: "",
+      spaceshipxOld: 0,
       codename: getCodeName(),
       codename_regex: /chaos-codename:\ [a-zA-Z_]*/g,
       chaos_job_regex: /chaos_jobs_pod_phase.*/g,

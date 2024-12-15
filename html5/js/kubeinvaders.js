@@ -77,7 +77,7 @@ function setSystemSettings() {
     sys_element.value = globalState.get('clu_insecure');
 
     sys_element = document.getElementById('sys_openresty_env_vars');
-    sys_element.value = selected_env_vars;
+    sys_element.value = globalState.get('selected_env_vars');
     
     checkHTTP(globalState.get('k8s_url'), 'sys_k8s_proxied_api_http_status_code')
 }
@@ -586,7 +586,7 @@ function drawRocket() {
 function drawSpaceship() {
     var image = new Image(); // Image constructor
     image.src = './images/spaceship.png';
-    ctx.drawImage(image, spaceshipX, spaceshipY, 60, 60);
+    ctx.drawImage(image, globalState.get('spaceshipX'), globalState.get('spaceshipY'), 60, 60);
     ctx.closePath();
 }
 
@@ -624,56 +624,55 @@ window.setInterval(function draw() {
             shot = true;
         }
 
-        if (autoPilotDirection == 0) {
-            autoPilotDirection = getRandomInt(canvas.width - spaceshipWidth);
-            spaceshipxOld = spaceshipX;
+        if (globalState.get('autoPilotDirection') == 0) {
+            globalState.set('autoPilotDirection', getRandomInt(canvas.width - spaceshipWidth));
+            globalState.set('spaceshipxOld', globalState.get('spaceshipX'));
         }
-        else if ((spaceshipX == autoPilotDirection)) {
-            autoPilotDirection = getRandomInt(canvas.width - spaceshipWidth);
-            spaceshipxOld = spaceshipX;
+        else if ((spaceshipX == globalState.get('autoPilotDirection'))) {
+            globalState.set('autoPilotDirection', getRandomInt(canvas.width - spaceshipWidth));
+            globalState.set('spaceshipxOld', globalState.get('spaceshipX'));
         }
-        else if ((autoPilotDirection < spaceshipxOld) && (spaceshipX < autoPilotDirection)) {
-            autoPilotDirection = getRandomInt(canvas.width - spaceshipWidth);
-            spaceshipxOld = spaceshipX;
+        else if ((globalState.get('autoPilotDirection') < globalState.get('spaceshipxOld')) && globalState.get('spaceshipX') < globalState.get('autoPilotDirection')) {
+            globalState.set('autoPilotDirection', getRandomInt(canvas.width - spaceshipWidth));
+            globalState.set('spaceshipxOld', globalState.get('spaceshipX'));
         }
-        else if ((autoPilotDirection > spaceshipxOld) && (spaceshipX > autoPilotDirection)) {
-            autoPilotDirection = getRandomInt(canvas.width - spaceshipWidth);
-            spaceshipxOld = spaceshipX;
+        else if ((globalState.get('autoPilotDirection') > globalState.get('spaceshipxOld')) && (globalState.get('spaceshipX') > globalState.get('autoPilotDirection'))) {
+            globalState.set('autoPilotDirection', getRandomInt(canvas.width - spaceshipWidth));
+            globalState.set('spaceshipxOld', globalState.get('spaceshipX'));
         }
         else {
-            if (autoPilotDirection > spaceshipX) {
-                spaceshipX += 5;
+            if (autoPilotDirection > globalState.get('spaceshipX')) {
+                globalState.set('spaceshipX') += 5;
             }
             else {
-                spaceshipX -= 5;
+                globalState.set('spaceshipX') -= 5;
             }
         }
     }
 
     if (rightPressed) {
-        spaceshipX += 3;
-        if (spaceshipX + spaceshipWidth > canvas.width) {
-            spaceshipX = canvas.width - spaceshipWidth;
+        globalState.set('spaceshipX', globalState.get('spaceshipX') + 3);
+        if (globalState.get('spaceshipX') + spaceshipWidth > canvas.width) {
+            globalState.set('spaceshipX', canvas.width - spaceshipWidth);
         }
     }
     else if (leftPressed) {
-        spaceshipX -= 3;
-        if (spaceshipX < 0) {
-            spaceshipX = 0;
+        globalState.set('spaceshipX', globalState.get('spaceshipX') - 3);
+        if (globalState.get('spaceshipX') < 0) {
+            globalState.set('spaceshipX', 0);
         }
     }
 
     if (upPressed) {
-        spaceshipY -= 3;
-        if (spaceshipY < 0) {
-            spaceshipY = 0;
+        globalState.set('spaceshipY', globalState.get('spaceshipY') - 3);
+        if (globalState.get('spaceshipY') < 0) {
+            globalState.set('spaceshipY', 0);
         }
     }
-
     else if (downPressed) {
-        spaceshipY += 3;
-        if (spaceshipY + spaceshipHeight > canvas.height) {
-            spaceshipY = canvas.height - spaceshipHeight;
+        globalState.set('spaceshipY', globalState.get('spaceshipY') + 3);
+        if (globalState.get('spaceshipY') + spaceshipHeight > canvas.height) {
+            globalState.set('spaceshipY', canvas.height - spaceshipHeight);
         }
     }
 
@@ -826,11 +825,11 @@ window.setInterval(function setAliens() {
 window.setInterval(function backgroundTasks() {
 
     if (!globalState.get('codename_configured')) {
-        chaosProgram = $('#chaosProgramTextArea').val();
-        chaosProgramWithCodename = chaosProgram.replace(codename_regex, "chaos-codename: " + globalState.get('codename'));
+        let chaosProgram = $('#chaosProgramTextArea').val();
+        let chaosProgramWithCodename = chaosProgram.replace(globalState.get('codename_regex'), "chaos-codename: " + globalState.get('codename'));
         $('#chaosProgramTextArea').val(chaosProgramWithCodename);
         $('#chaosProgramTextArea').text(chaosProgramWithCodename);
-        chaosProgram = chaosProgramWithCodename;
+        globalState.set('chaosProgram', chaosProgramWithCodename);
         globalState.set('codename_configured', true);
     }
 
