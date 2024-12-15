@@ -663,13 +663,13 @@ window.setInterval(function draw() {
         }
     }
 
-    if (upPressed) {
+    if (globalState.get('upPressed')) {
         globalState.set('spaceshipY', globalState.get('spaceshipY') - 3);
         if (globalState.get('spaceshipY') < 0) {
             globalState.set('spaceshipY', 0);
         }
     }
-    else if (downPressed) {
+    else if (globalState.get('downPressed')) {
         globalState.set('spaceshipY', globalState.get('spaceshipY') + 3);
         if (globalState.get('spaceshipY') + spaceshipHeight > canvas.height) {
             globalState.set('spaceshipY', canvas.height - spaceshipHeight);
