@@ -610,10 +610,10 @@ window.setInterval(function draw() {
         drawRocket();
     }
 
-    if (globalState.get('x') + globalState.get('dx') > canvas.width - ballRadius || globalState.get('x') + globalState.get('dx') < ballRadius) {
+    if (globalState.get('x') + globalState.get('dx') > canvas.width - globalState.get('ballRadius') || globalState.get('x') + globalState.get('dx') <  globalState.get('ballRadius')) {
         globalState.set('dx') = -globalState.get('dx');
     }
-    if (globalState.get('y') + globalState.get('dy') > canvas.height - ballRadius || globalState.get('y') + globalState.get('dy') < ballRadius) {
+    if (globalState.get('y') + globalState.get('dy') > canvas.height - globalState.get('ballRadius') || globalState.get('y') + globalState.get('dy') <  globalState.get('ballRadius')) {
         globalState.set('dy') = -globalState.get('dy');
     }
 
