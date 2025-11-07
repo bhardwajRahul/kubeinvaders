@@ -45,8 +45,6 @@ If you need a lab kubernetes cluster you can use this setup via Make and Minikub
 [![Artifact HUB](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/kubeinvaders)](https://artifacthub.io/packages/search?repo=kubeinvaders)
 
 ```bash
-# Please be sure to use kubeinvaders-1.9.8 that is ne latest helm chart version!
-
 helm repo add kubeinvaders https://lucky-sideburn.github.io/helm-charts/
 helm repo update
 
